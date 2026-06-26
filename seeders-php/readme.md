@@ -1,0 +1,1 @@
+Catatan: Sesuaikan namespace app\models\* di SeederController.php dengan struktur project Yii2 anda. Jika model belum ada, seeder akan gagal, anda perlu generate model terlebih dahulu, anda bisa memanfaatkan fitur Gii.
