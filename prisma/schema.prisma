@@ -13,8 +13,8 @@ datasource db {
 }
 
 enum StatusKawin {
-  kawin
-  tidak_kawin @map("tidak kawin")
+  Kawin
+  tidak_kawin @map("Tidak Kawin")
 }
 
 enum StatusPegawai {

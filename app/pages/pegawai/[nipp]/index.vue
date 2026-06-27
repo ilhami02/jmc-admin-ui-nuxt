@@ -12,7 +12,7 @@
                 <!-- Foto -->
                 <div class="col-auto">
                   <img
-                    src="/images/pegawai/ahmad.jpg"
+                    :src="pegawai.foto_pegawai || '/images/default-avatar.png'"
                     alt=""
                     class="foto-ptofil"
                   />
@@ -22,13 +22,13 @@
                   <!-- NIP -->
                   <div class="datagrid-item mb-4">
                     <div class="datagrid-title">NIP</div>
-                    <div class="datagrid-content">0025</div>
+                    <div class="datagrid-content">{{ pegawai.nip }}</div>
                   </div>
 
                   <!-- Nama Lengkap -->
                   <div class="datagrid-item">
                     <div class="datagrid-title">Nama Lengkap</div>
-                    <div class="datagrid-content">Ahmad Hendarto</div>
+                    <div class="datagrid-content">{{ pegawai.nama_pegawai }}</div>
                   </div>
                 </div>
               </div>
@@ -38,7 +38,7 @@
             <div class="col-md-6">
               <div class="datagrid-item">
                 <div class="datagrid-title">Email</div>
-                <div class="datagrid-content">Ahmad@email.com</div>
+                <div class="datagrid-content">{{ pegawai.email }}</div>
               </div>
             </div>
 
@@ -46,7 +46,7 @@
             <div class="col-md-6">
               <div class="datagrid-item">
                 <div class="datagrid-title">Nomor HP</div>
-                <div class="datagrid-content">+6292415611611</div>
+                <div class="datagrid-content">{{ pegawai.nomor_hp }}</div>
               </div>
             </div>
 
@@ -54,7 +54,7 @@
             <div class="col-md-6">
               <div class="datagrid-item">
                 <div class="datagrid-title">Tempat Lahir</div>
-                <div class="datagrid-content">Yogyakarta</div>
+                <div class="datagrid-content">{{ pegawai.tempat_lahir }}</div>
               </div>
             </div>
 
@@ -62,7 +62,7 @@
             <div class="col-md-6">
               <div class="datagrid-item">
                 <div class="datagrid-title">Tanggal Lahir</div>
-                <div class="datagrid-content">24 Juni 1992</div>
+                <div class="datagrid-content">{{ formatDateID(pegawai.tanggal_lahir) }}</div>
               </div>
             </div>
 
@@ -70,7 +70,7 @@
             <div class="col-md-6">
               <div class="datagrid-item">
                 <div class="datagrid-title">Usia</div>
-                <div class="datagrid-content">33 tahun</div>
+                <div class="datagrid-content">{{ pegawai.usia }} tahun</div>
               </div>
             </div>
 
@@ -78,10 +78,19 @@
             <div class="col-md-6">
               <div class="datagrid-item">
                 <div class="datagrid-title">Pendidikan</div>
-                <div class="datagrid-content">
-                  S1 / Universitas Gadjah Mada / 2012
-                </div>
-                <div class="datagrid-content">SMA / SMA Negeri 1 / 2008</div>
+                <template v-if="pegawai.pendidikan && pegawai.pendidikan.length > 0">
+                  <div 
+                    v-for="edu in pegawai.pendidikan" 
+                    :key="edu.id" 
+                    class="datagrid-content"
+                  >
+                    {{ edu.tingkat_pendidikan }} / {{ edu.nama_sekolah }} / {{ edu.tahun_lulus }}
+                  </div>
+                </template>
+                
+                <template v-else>
+                  <div class="datagrid-content text-muted">-</div>
+                </template>
               </div>
             </div>
 
@@ -90,7 +99,7 @@
               <div class="datagrid-item">
                 <div class="datagrid-title">Alamat Lengkap</div>
                 <div class="datagrid-content">
-                  Jl. Prapanca No. 6A, Kasihan, Bantul
+                  {{ pegawai.alamat_lengkap }}
                 </div>
               </div>
             </div>
@@ -99,7 +108,7 @@
             <div class="col-md-4">
               <div class="datagrid-item">
                 <div class="datagrid-title">Kecamatan</div>
-                <div class="datagrid-content">Kasihan</div>
+                <div class="datagrid-content">{{pegawai.kecamatan?.kecamatan}}</div>
               </div>
             </div>
 
@@ -107,7 +116,7 @@
             <div class="col-md-4">
               <div class="datagrid-item">
                 <div class="datagrid-title">Kabupaten</div>
-                <div class="datagrid-content">Bantul</div>
+                <div class="datagrid-content">{{ pegawai.kecamatan?.kabupaten }}</div>
               </div>
             </div>
 
@@ -115,7 +124,7 @@
             <div class="col-md-4">
               <div class="datagrid-item">
                 <div class="datagrid-title">Provinsi</div>
-                <div class="datagrid-content">D.I. Yogyakarta</div>
+                <div class="datagrid-content">{{pegawai.kecamatan?.provinsi}}</div>
               </div>
             </div>
 
@@ -123,7 +132,7 @@
             <div class="col-md-6">
               <div class="datagrid-item">
                 <div class="datagrid-title">Status Pernikahan</div>
-                <div class="datagrid-content">Belum Menikah</div>
+                <div class="datagrid-content">{{ pegawai.status_kawin }}</div>
               </div>
             </div>
 
@@ -131,7 +140,7 @@
             <div class="col-md-6">
               <div class="datagrid-item">
                 <div class="datagrid-title">Jumlah Anak</div>
-                <div class="datagrid-content">0</div>
+                <div class="datagrid-content">{{ pegawai.jumlah_anak }}</div>
               </div>
             </div>
           </div>
@@ -149,7 +158,7 @@
             <div class="col-12">
               <div class="datagrid-item">
                 <div class="datagrid-title">Tanggal Masuk</div>
-                <div class="datagrid-content">24 Juni 2025</div>
+                <div class="datagrid-content">{{ formatDateID(pegawai.tanggal_masuk) }}</div>
               </div>
             </div>
 
@@ -157,7 +166,7 @@
             <div class="col-md-6">
               <div class="datagrid-item">
                 <div class="datagrid-title">Jabatan</div>
-                <div class="datagrid-content">Manager</div>
+                <div class="datagrid-content">{{ pegawai.jabatan?.nama }}</div>
               </div>
             </div>
 
@@ -165,7 +174,7 @@
             <div class="col-md-6">
               <div class="datagrid-item">
                 <div class="datagrid-title">Departemen</div>
-                <div class="datagrid-content">Produksi</div>
+                <div class="datagrid-content">{{ pegawai.departemen?.nama }}</div>
               </div>
             </div>
 
@@ -173,7 +182,7 @@
             <div class="col-md-6">
               <div class="datagrid-item">
                 <div class="datagrid-title">Status</div>
-                <div class="datagrid-content">Aktif</div>
+                <div class="datagrid-content">{{ pegawai.status }}</div>
               </div>
             </div>
           </div>
@@ -198,6 +207,16 @@ definePageMeta({
 useSeoMeta({
   title: "Detail Pegawai",
 });
+
+const route = useRoute()
+const nip = route.params.nipp
+const token = useCookie('token')
+
+const { data: response } = await useFetch(`/api/pegawai/${nip}`, {
+  headers: { Authorization: `Bearer ${token.value}` }
+})
+
+const pegawai = computed(() => response.value?.data || {})
 
 const { goBack } = useGoBack();
 </script>

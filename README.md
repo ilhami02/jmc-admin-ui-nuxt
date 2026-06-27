@@ -98,3 +98,5 @@ npm install prisma@6 @prisma/client@6
 npm install bcryptjs
 npm install jsonwebtoken
 npm install -D @types/jsonwebtoken
+npm install uuid
+npm install -D @types/uuid

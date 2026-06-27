@@ -16,8 +16,62 @@ import {
   IconFileDescription,
   IconCloudDownload,
 } from "@tabler/icons-vue";
-import { dataPegawai } from "~/data/data-pegawai.js";
+// import { dataPegawai } from "~/data/data-pegawai.js";
+
+const token = useCookie('token') // get JWT
+
+const { data: response, pending, refresh } = await useFetch('/api/pegawai', {
+  headers: {
+    Authorization: `Bearer ${token.value}`
+  }
+})
+
+const pegawaiList = computed(() => response.value?.data || [])
+
 import { formatDateID } from "~/utils/formatDate.js";
+
+const hitungMasaKerja = (tanggalMasuk) => {
+  if (!tanggalMasuk) return 0;
+  
+  const tglMasuk = new Date(tanggalMasuk);
+  const sekarang = new Date();
+  
+  let selisihTahun = sekarang.getFullYear() - tglMasuk.getFullYear();
+  
+  // Kurangi 1 tahun jika bulan/hari saat ini belum melewati bulan/hari masuk kerja
+  if (
+    sekarang.getMonth() < tglMasuk.getMonth() || 
+    (sekarang.getMonth() === tglMasuk.getMonth() && sekarang.getDate() < tglMasuk.getDate())
+  ) {
+    selisihTahun--;
+  }
+  
+  return selisihTahun;
+  };
+
+  // BUTTON DELETE PEGAWAI
+  // save id pegawai
+  const selectedId = ref(null);
+
+  const hapusData = async () => {
+    if (!selectedId.value) return;
+
+    try {
+      await $fetch(`/api/pegawai/${selectedId.value}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token.value}`
+        }
+      });
+      
+      refresh(); 
+      // console.log("Data berhasil dihapus!");
+      alert("Berhasil menghapud data pegawai!.");
+    } catch (error) {
+      // console.error("Gagal menghapus data:", error);
+      alert("Gagal menghapus data pegawai.");
+    }
+  };
 </script>
 
 <template>
@@ -80,7 +134,7 @@ import { formatDateID } from "~/utils/formatDate.js";
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, index) in dataPegawai" :key="item.nip">
+            <tr v-for="(item, index) in pegawaiList" :key="item.id">
               <td class="text-center">{{ index + 1 }}</td>
               <td class="text-nowrap">
                 <div class="d-flex">
@@ -123,6 +177,7 @@ import { formatDateID } from "~/utils/formatDate.js";
                     class="text-danger"
                     data-bs-toggle="modal"
                     data-bs-target="#modal-hapus"
+                    @click="selectedId = item.id"
                   >
                     <span
                       data-bs-toggle="tooltip"
@@ -134,11 +189,16 @@ import { formatDateID } from "~/utils/formatDate.js";
                   </a>
                 </div>
               </td>
-              <td>{{ item.nip }}</td>
+              <!-- <td>{{ item.nip }}</td>
               <td>{{ item.nama }}</td>
               <td>{{ item.jabatan }}</td>
               <td>{{ formatDateID(item.tanggalMasuk) }}</td>
-              <td>{{ item.masaKerja }}</td>
+              <td>{{ item.masaKerja }}</td> -->
+              <td>{{ item.nip }}</td>
+              <td>{{ item.nama_pegawai }}</td>
+              <td>{{ item.jabatan?.nama || '-' }}</td> 
+              <td>{{ formatDateID(item.tanggal_masuk) }}</td>
+              <td>{{ hitungMasaKerja(item.tanggal_masuk) }} Tahun</td>
             </tr>
           </tbody>
         </table>
@@ -226,6 +286,7 @@ import { formatDateID } from "~/utils/formatDate.js";
                       href="#"
                       class="btn btn-danger btn-4 w-100"
                       data-bs-dismiss="modal"
+                      @click="hapusData"
                     >
                       Hapus
                     </a>
