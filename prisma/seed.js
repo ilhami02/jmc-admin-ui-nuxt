@@ -141,6 +141,49 @@ async function main() {
   });
   console.log('Activities seed done');
 
+  await prisma.SettingTunjangan.create({
+    data: {
+      tarif_per_km: 10000,
+      berlaku_mulai: new Date('2026-01-01'),
+      min_kilometer: 5,
+      max_kilometer: 25
+    },
+  });
+  console.log('Setting tunjangan seed done');
+
+  // await prisma.tunjanganBulan.create({
+  //   data: {
+  //     bulan: 5,
+  //     tahun: 2026,
+  //     total_penerima: 3,
+  //     total_tunjangan: 3810000, 
+      
+  //     detail_tunjangan: {
+  //       create: [
+  //         {
+  //           id_pegawai: 1,
+  //           kilometer: 5,
+  //           jumlah_hari: 20,
+  //           nominal: 1000000
+  //         },
+  //         {
+  //           id_pegawai: 2,
+  //           kilometer: 8,
+  //           jumlah_hari: 22,
+  //           nominal: 1760000
+  //         },
+  //         {
+  //           id_pegawai: 3,
+  //           kilometer: 5, 
+  //           jumlah_hari: 21,
+  //           nominal: 1050000
+  //         }
+  //       ]
+  //     }
+  //   }
+  // });
+  // console.log('Rekap & Detail Tunjangan seed done');
+
   console.log('All done!');
 }
 

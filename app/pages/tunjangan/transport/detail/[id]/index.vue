@@ -1,9 +1,11 @@
 <template>
   <div>
-    <h3 class="card-title">Bulan Januari 2026</h3>
+    <h3 class="card-title" v-if="tunjangan">
+      Bulan {{ getMonthName(tunjangan.bulan) }} {{ tunjangan.tahun }}
+    </h3>
     <div class="card">
       <div class="card-header">
-        <button class="btn btn-primary">Hitung Tunjangan</button>
+        <!-- <button class="btn btn-primary" @click="infoHitung">Hitung Tunjangan</button> -->
         <div class="ms-auto">
           <div class="input-group">
             <input
@@ -29,16 +31,19 @@
             </tr>
           </thead>
           <tbody
-            v-for="(item, index) in detailTunjanganTransport"
+            v-for="(item, index) in tunjangan?.detail_tunjangan"
             :key="item.id"
           >
             <tr>
               <td class="text-center">{{ index + 1 }}</td>
-              <td>{{ item.nama }}</td>
-              <td class="text-center">{{ item.km }}</td>
-              <td class="text-center">{{ item.hari }}</td>
+              <td>{{ item.pegawai?.nama_pegawai || 'Anonim' }}</td>
+              <td class="text-center">{{ item.kilometer }}</td>
+              <td class="text-center">{{ item.jumlah_hari }}</td>
               <td class="text-end">{{ formatRupiah(item.nominal) }}</td>
             </tr>
+          </tbody>
+          <tbody v-if="pending">
+             <tr><td colspan="5" class="text-center py-3">Memuat detail...</td></tr>
           </tbody>
         </table>
       </div>
@@ -81,7 +86,31 @@ definePageMeta({
   title: "Detail Tunjangan Transport",
 });
 
-import { detailTunjanganTransport } from "~/data/tunjangan-transport.js";
 import { IconSearch } from "@tabler/icons-vue";
 import { formatRupiah } from "~/utils/formatRupiah.js";
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+const token = useCookie('token');
+const idTunjangan = route.params.id;
+
+// Ambil data detail dari API
+const { data: response, pending } = await useFetch(`/api/tunjangan/${idTunjangan}`, {
+  headers: { Authorization: `Bearer ${token.value}` }
+});
+
+const tunjangan = computed(() => response.value?.data || null);
+
+const getMonthName = (monthNumber) => {
+  if (!monthNumber) return '';
+  const date = new Date();
+  date.setMonth(monthNumber - 1);
+  return date.toLocaleString('id-ID', { month: 'long' });
+};
+
+// Karena desain memuat tombol "Hitung Tunjangan" di dalam Detail (padahal detail itu artinya sudah terhitung), 
+// kita beri alert info saja jika tombol ini ditekan.
+const infoHitung = () => {
+    alert("Proses 'Hitung Tunjangan' idealnya dilakukan melalui Modal di halaman utama untuk bulan yang belum di-generate.");
+};
 </script>

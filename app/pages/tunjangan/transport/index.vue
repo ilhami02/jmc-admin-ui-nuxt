@@ -1,6 +1,9 @@
 <template>
   <div class="card">
     <div class="card-header">
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalHitung">
+        Hitung Tunjangan
+      </button>
       <div class="d-flex gap-2 ms-auto">
         <!-- Filter Tahun -->
         <select name="" id="" class="form-select" style="width: 180px">
@@ -31,12 +34,12 @@
             <th class="text-center">Aksi</th>
           </tr>
         </thead>
-        <tbody v-for="(item, index) in tunjanganTransport" :key="item.id">
+        <tbody v-for="(item, index) in listTunjangan" :key="item.id">
           <tr>
             <td class="text-center">{{ index + 1 }}</td>
-            <td>{{ item.bulan }}</td>
-            <td class="text-center">{{ item.totalPenerima }}</td>
-            <td class="text-end">{{ formatRupiah(item.totalTunjangan) }}</td>
+            <td>{{ getMonthName(item.bulan) }} {{ item.tahun }}</td>
+            <td class="text-center">{{ item.total_penerima }}</td>
+            <td class="text-end">{{ formatRupiah(item.total_tunjangan) }}</td>
             <td class="text-center">
               <NuxtLink
                 :to="`/tunjangan/transport/detail/${item.id}`"
@@ -78,6 +81,39 @@
         </li>
       </ul>
     </div>
+    <div class="modal fade" id="modalHitung" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Hitung Tunjangan Transport</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Pilih Bulan</label>
+              <select class="form-select" v-model="formGenerate.bulan">
+                <option v-for="m in 12" :key="m" :value="m">{{ getMonthName(m) }}</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Tahun</label>
+              <input type="number" class="form-control" v-model="formGenerate.tahun" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Jumlah Hari Kerja (Pukul Rata)</label>
+              <input type="number" class="form-control" v-model="formGenerate.hari_kerja" placeholder="Contoh: 22" />
+              <small class="text-muted">Sistem akan mengalikan nominal tarif transport per km dengan jumlah hari ini untuk semua pegawai aktif.</small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="button" class="btn btn-primary" @click="generateTunjangan" :disabled="isGenerating">
+              {{ isGenerating ? 'Menghitung...' : 'Hitung Sekarang' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -85,12 +121,79 @@
 definePageMeta({
   title: "Tunjangan Transport",
 });
-
 useSeoMeta({
   title: "Tunjangan Transport",
 });
 
+import { ref, computed } from 'vue';
 import { IconSearch } from "@tabler/icons-vue";
 import { formatRupiah } from "~/utils/formatRupiah.js";
-import { tunjanganTransport } from "~/data/tunjangan-transport.js";
+
+const token = useCookie('token');
+
+// Mengambil list tunjangan dari backend API yang kita buat sebelumnya
+const { data: response, pending, refresh } = await useFetch('/api/tunjangan', {
+  headers: { Authorization: `Bearer ${token.value}` }
+});
+
+const listTunjangan = computed(() => response.value?.data || []);
+
+// --- LOGIKA HITUNG TUNJANGAN ---
+const isGenerating = ref(false);
+const formGenerate = ref({
+  bulan: new Date().getMonth() + 1, // Default bulan ini
+  tahun: new Date().getFullYear(),  // Default tahun ini
+  hari_kerja: 22                    // Asumsi standar hari kerja
+});
+
+const getMonthName = (monthNumber) => {
+  const date = new Date();
+  date.setMonth(monthNumber - 1);
+  return date.toLocaleString('id-ID', { month: 'long' });
+};
+
+const generateTunjangan = async () => {
+  if (!formGenerate.value.hari_kerja || formGenerate.value.hari_kerja <= 0) {
+    alert("Jumlah hari kerja harus lebih dari 0");
+    return;
+  }
+
+  isGenerating.value = true;
+  try {
+    const resPegawai = await $fetch('/api/pegawai', {
+      headers: { Authorization: `Bearer ${token.value}` }
+    });
+
+    const pegawaiAktif = resPegawai.data.filter(p => p.status === 'Aktif');
+    if (pegawaiAktif.length === 0) {
+      alert("Tidak ada pegawai aktif untuk dihitung!");
+      isGenerating.value = false;
+      return;
+    }
+
+    const data_hari_kerja = {};
+    pegawaiAktif.forEach(p => {
+      data_hari_kerja[p.id.toString()] = formGenerate.value.hari_kerja;
+    });
+
+    await $fetch('/api/tunjangan/generate', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token.value}` },
+      body: {
+        bulan: formGenerate.value.bulan,
+        tahun: formGenerate.value.tahun,
+        data_hari_kerja: data_hari_kerja
+      }
+    });
+
+    alert("Data tunjangan berhasil dihitung dan disimpan!");
+    refresh();
+    
+  } catch (error) {
+    console.error(error);
+    alert(error.response?._data?.statusMessage || "Terjadi kesalahan saat menghitung tunjangan.");
+  } finally {
+    isGenerating.value = false;
+  }
+};
 </script>
