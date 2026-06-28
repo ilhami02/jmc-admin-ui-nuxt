@@ -25,7 +25,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const token = useCookie('token') // get JWT
 
@@ -137,8 +137,26 @@ const exportExcel = () => {
   if (pegawaiList.value.length === 0) return alert('Tidak ada data');
   const data = pegawaiList.value.map((p, index) => ({
     No: (meta.value.page - 1) * limit.value + index + 1,
-    NIP: p.nip, Nama: p.nama_pegawai, Jabatan: p.jabatan?.nama || '-',
-    'Tanggal Masuk': formatDateID(p.tanggal_masuk), 'Masa Kerja': hitungMasaKerja(p.tanggal_masuk)
+    NIP: p.nip, 
+    'Nama Lengkap': p.nama_pegawai, 
+    Email: p.email || '-',
+    'Nomor HP': p.nomor_hp || '-',
+    'Tempat Lahir': p.tempat_lahir || '-',
+    'Tanggal Lahir': formatDateID(p.tanggal_lahir),
+    'Usia': p.usia ? `${p.usia} Tahun` : '-',
+    'Jenis Kelamin': p.jenis_kelamin || '-',
+    'Status Pernikahan': p.status_kawin || '-',
+    'Jumlah Anak': p.jumlah_anak || 0,
+    'Alamat': p.alamat_lengkap || '-',
+    'Kecamatan': p.kecamatan?.kecamatan || '-',
+    'Kabupaten': p.kecamatan?.kabupaten || '-',
+    'Provinsi': p.kecamatan?.provinsi || '-',
+    'Tanggal Masuk': formatDateID(p.tanggal_masuk), 
+    'Jabatan': p.jabatan?.nama || '-',
+    'Departemen': p.departemen?.nama || '-',
+    'Status Kontrak': p.status_kontrak || '-',
+    'Status Pegawai': p.status || '-',
+    'Masa Kerja': hitungMasaKerja(p.tanggal_masuk) + ' Tahun'
   }));
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
@@ -148,21 +166,74 @@ const exportExcel = () => {
 
 const exportPDF = () => {
   if (pegawaiList.value.length === 0) return alert('Tidak ada data');
-  const doc = new jsPDF();
+  const doc = new jsPDF('l', 'mm', 'a4'); // Gunakan format Landscape agar muat banyak kolom
   doc.text("Daftar Pegawai", 14, 15);
   const tableData = pegawaiList.value.map((p, index) => [
-    (meta.value.page - 1) * limit.value + index + 1, p.nip, p.nama_pegawai, p.jabatan?.nama || '-', formatDateID(p.tanggal_masuk), hitungMasaKerja(p.tanggal_masuk) + ' Thn'
+    (meta.value.page - 1) * limit.value + index + 1, 
+    p.nip, 
+    p.nama_pegawai, 
+    p.email || '-',
+    p.nomor_hp || '-',
+    formatDateID(p.tanggal_lahir),
+    p.jenis_kelamin || '-',
+    p.status_kawin || '-',
+    p.alamat_lengkap || '-',
+    p.kecamatan?.kecamatan || '-',
+    formatDateID(p.tanggal_masuk), 
+    p.jabatan?.nama || '-',
+    p.departemen?.nama || '-',
+    p.status_kontrak || '-',
+    p.status || '-',
+    hitungMasaKerja(p.tanggal_masuk) + ' Thn'
   ]);
-  doc.autoTable({ head: [['No', 'NIP', 'Nama', 'Jabatan', 'Tgl Masuk', 'Masa Kerja']], body: tableData, startY: 20 });
+  
+  autoTable(doc, { 
+    head: [['No', 'NIP', 'Nama', 'Email', 'No HP', 'Tgl Lahir', 'L/P', 'Status', 'Alamat', 'Kec', 'Tgl Masuk', 'Jabatan', 'Dept', 'Kontrak', 'St.Pegawai', 'Masa Kerja']], 
+    body: tableData, 
+    startY: 20,
+    styles: { fontSize: 6, cellPadding: 1 },
+    headStyles: { fillColor: [32, 107, 196] } // warna biru tabler
+  });
   doc.save("Data_Pegawai.pdf");
 };
 
 const exportPdfDetail = (item) => {
   const doc = new jsPDF();
-  doc.text(`Detail Pegawai`, 14, 15);
-  doc.text(`Nama : ${item.nama_pegawai}`, 14, 30);
-  doc.text(`NIP  : ${item.nip}`, 14, 40);
-  doc.text(`Jabatan : ${item.jabatan?.nama || '-'}`, 14, 50);
+  doc.setFontSize(16);
+  doc.text("Data Detail Pegawai", 14, 15);
+  
+  const detailData = [
+    ['NIP', item.nip],
+    ['Nama Lengkap', item.nama_pegawai],
+    ['Email', item.email || '-'],
+    ['Nomor HP', item.nomor_hp || '-'],
+    ['Tempat Lahir', item.tempat_lahir || '-'],
+    ['Tanggal Lahir', formatDateID(item.tanggal_lahir)],
+    ['Usia', item.usia ? `${item.usia} Tahun` : '-'],
+    ['Jenis Kelamin', item.jenis_kelamin || '-'],
+    ['Status Pernikahan', item.status_kawin || '-'],
+    ['Jumlah Anak', item.jumlah_anak?.toString() || '0'],
+    ['Alamat', item.alamat_lengkap || '-'],
+    ['Lokasi', item.kecamatan ? `${item.kecamatan.kecamatan}, ${item.kecamatan.kabupaten}, ${item.kecamatan.provinsi}` : '-'],
+    ['Tanggal Masuk', formatDateID(item.tanggal_masuk)],
+    ['Jabatan', item.jabatan?.nama || '-'],
+    ['Departemen', item.departemen?.nama || '-'],
+    ['Status Kontrak', item.status_kontrak || '-'],
+    ['Status Pegawai', item.status || '-'],
+    ['Masa Kerja', hitungMasaKerja(item.tanggal_masuk) + ' Tahun']
+  ];
+
+  autoTable(doc, {
+    body: detailData,
+    startY: 22,
+    theme: 'grid',
+    styles: { fontSize: 10, cellPadding: 3 },
+    columnStyles: {
+      0: { fontStyle: 'bold', fillColor: [241, 245, 249], cellWidth: 50 },
+      1: { cellWidth: 'auto' }
+    }
+  });
+
   doc.save(`Detail_${item.nip}.pdf`);
 };
 

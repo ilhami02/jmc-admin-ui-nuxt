@@ -96,7 +96,8 @@ export default defineEventHandler(async (event) => {
         where: whereCondition,
         include: {
             jabatan: true,
-            departemen: true
+            departemen: true,
+            kecamatan: true
         },
         orderBy: orderByCondition,
         skip: skip,
