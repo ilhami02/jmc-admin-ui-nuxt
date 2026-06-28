@@ -19,6 +19,11 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
+    let currentUser: any = null
+    try {
+        currentUser = verifyToken(event)
+    } catch (e) {}
+
     // Ambil ID dari URL parameter, misal: /api/user/5 → id = 5
     const id = parseInt(event.context.params?.id || '0')
 
@@ -78,6 +83,10 @@ export default defineEventHandler(async (event) => {
                 where: { id: parseInt(body.id_pegawai) },
                 data: pegawaiUpdate
             })
+        }
+
+        if (currentUser) {
+            await logActivity(event, 'UPDATE', `Modul Kelola User - Mengubah akun ID: ${id}`, currentUser.id)
         }
 
         return { status: 'success', message: 'User berhasil diperbarui', data: updatedUser }

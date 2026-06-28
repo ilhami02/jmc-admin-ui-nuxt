@@ -3,6 +3,14 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
+    // Dapatkan user yang sedang login untuk log
+    let currentUser: any = null
+    try {
+        currentUser = verifyToken(event)
+    } catch (e) {
+        // Biarkan jika belum ada autentikasi
+    }
+
     const body = await readBody(event)
 
     // Validasi username unik sebelum membuat user baru
@@ -28,6 +36,11 @@ export default defineEventHandler(async (event) => {
                 disabled: body.disabled
             }
         })
+
+        if (currentUser) {
+            await logActivity(event, 'CREATE', `Modul Kelola User - Membuat akun dengan username: ${newUser.username}`, currentUser.id)
+        }
+
         return { status: 'success', data: newUser }
     } catch (e: any) {
         throw createError({ statusCode: 500, statusMessage: e.message })

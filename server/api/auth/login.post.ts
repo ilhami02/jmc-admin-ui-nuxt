@@ -55,16 +55,20 @@ export default defineEventHandler(async (event) => {
 
     // create JWT token
     const secretKey = process.env.JWT_SECRET || 'fallback_secret'
-    const token = jwt.sign(
-        { 
-            id: user.id, 
-            username: user.username, 
-            id_role: user.id_role,
-            role_name: user.role?.nama_role
-        },
-        secretKey,
-        { expiresIn: '7d' } // JWT diset 7 hari karena expired 3 menit di-handle secara idle-timeout di frontend
-    )
+    const roleName = user.role?.nama_role
+    const payload = { id: user.id, username: user.username, id_role: user.id_role, role_name: roleName }
+    const token = jwt.sign(payload, secretKey, { expiresIn: '7d' })
+
+    // Rekam log aktivitas login
+    await logActivity(event, 'LOGIN', 'Autentikasi - User berhasil login', user.id)
+
+    // Set token di cookie
+    setCookie(event, 'token', token, {
+        httpOnly: false, // Diubah menjadi false agar Nuxt client middleware bisa membacanya
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 604800 // 7 hari
+    })
 
     // save last login time
     await prisma.user.update({

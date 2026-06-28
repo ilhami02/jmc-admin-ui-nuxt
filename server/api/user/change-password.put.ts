@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client'
-// import { verifyToken } from '~/server/utils/auth'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -56,6 +55,8 @@ export default defineEventHandler(async (event) => {
             where: { id: currentUser.id },
             data: { password_hash: newPasswordHash }
         })
+
+        await logActivity(event, 'UPDATE', 'Modul Change Password - Mengubah kata sandi', currentUser.id)
 
         return {
             status: 'success',

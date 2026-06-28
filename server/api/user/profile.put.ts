@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client'
-// import { verifyToken } from '~/server/utils/auth'
 
 const prisma = new PrismaClient()
 
@@ -34,6 +33,8 @@ export default defineEventHandler(async (event) => {
                 email
             }
         })
+
+        await logActivity(event, 'UPDATE', 'Modul My Profile - Memperbarui data profil', currentUser.id)
 
         // CATATAN: Karena username atau nama berubah, ideally kita butuh token baru 
         // tapi untuk mempermudah (krn ini hanya put endpoint), kita serahkan ke klien untuk re-login jika username berubah.

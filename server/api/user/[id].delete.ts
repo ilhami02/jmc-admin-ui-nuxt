@@ -13,11 +13,11 @@
  * terutama jika tidak ada admin lain yang bisa memulihkan aksesnya.
  */
 import { PrismaClient } from '@prisma/client'
-// import { verifyToken } from '~/server/utils/auth'
 const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
     const id = parseInt(event.context.params?.id || '0')
+    let currentUser: any = null
 
     // ===== Cek user yang sedang login =====
     // verifyToken() membaca JWT dari header Authorization,
@@ -26,9 +26,9 @@ export default defineEventHandler(async (event) => {
     //
     // Catatan: Jika autentikasi masih di-disable (token tidak dikirim),
     // kita tetap coba verifikasi. Jika gagal, kita skip pengecekan ini
-    // dan biarkan delete berjalan normal (untuk kemudahan development).
+    // biarkan delete berjalan normal (untuk kemudahan development).
     try {
-        const currentUser = verifyToken(event)
+        currentUser = verifyToken(event)
 
         // Bandingkan: apakah user mau menghapus dirinya sendiri?
         if (currentUser && currentUser.id === id) {
@@ -46,6 +46,11 @@ export default defineEventHandler(async (event) => {
 
     try {
         await prisma.user.delete({ where: { id } })
+
+        if (currentUser) {
+            await logActivity(event, 'DELETE', `Modul Kelola User - Menghapus akun ID: ${id}`, currentUser.id)
+        }
+
         return { status: 'success', message: 'User berhasil dihapus' }
     } catch (e: any) {
         throw createError({ statusCode: 500, statusMessage: e.message })

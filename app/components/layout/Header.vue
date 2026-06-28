@@ -317,7 +317,19 @@ const getInitials = (name) => {
   return name.substring(0, 2).toUpperCase();
 };
 
-const handleLogout = () => {
+const handleLogout = async () => {
+  try {
+    // Panggil backend untuk rekam log logout
+    if (tokenCookie.value) {
+      await $fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${tokenCookie.value}` }
+      });
+    }
+  } catch (e) {
+    console.error('Failed to log out on server');
+  }
+
   useCookie('token').value = null;
   useCookie('rememberMe').value = null;
   useCookie('userPermissions').value = null;
