@@ -53,7 +53,7 @@
           class="offcanvas-body p-3 p-lg-0 flex-column flex-grow-1 overflow-auto"
         >
           <ul class="navbar-nav align-items-start pt-lg-3">
-            <template v-for="item in menuItems">
+            <template v-for="item in filteredMenuItems">
               <!-- Menu dengan children (dropdown) -->
               <li
                 :key="item.title"
@@ -123,10 +123,40 @@
 
 <script setup>
 import { menuItems } from "~/data/menu.js";
+import { computed } from "vue";
 
 const appName = "Admin";
 const route = useRoute();
 const config = useRuntimeConfig();
+
+const { hasAccess } = useAuth();
+
+const routeMap = {
+  "/": "dashboard",
+  "/pegawai": "modul_pegawai",
+  "/tunjangan/setting": "setting_tunjangan_transport",
+  "/tunjangan/transport": "modul_tunjangan_transport",
+  "/user/role": "kelola_role",
+  "/user/manage": "kelola_user",
+  "/log": "modul_log",
+};
+
+const filteredMenuItems = computed(() => {
+  return menuItems.map(item => {
+    if (item.children) {
+      const filteredChildren = item.children.filter(child => {
+        const module = routeMap[child.to];
+        return module ? hasAccess(module) : true;
+      });
+      return { ...item, children: filteredChildren };
+    }
+    return item;
+  }).filter(item => {
+    if (item.children) return item.children.length > 0;
+    const module = routeMap[item.to];
+    return module ? hasAccess(module) : true;
+  });
+});
 
 // Dropdown yang sedang terbuka
 const openDropdowns = ref([]);
@@ -157,7 +187,7 @@ const toggleDropdown = (title) => {
 watch(
   () => route.path,
   () => {
-    menuItems.forEach((item) => {
+    filteredMenuItems.value.forEach((item) => {
       if (item.children && isParentActive(item)) {
         if (!openDropdowns.value.includes(item.title)) {
           openDropdowns.value.push(item.title);

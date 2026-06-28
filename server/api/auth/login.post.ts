@@ -18,10 +18,16 @@ export default defineEventHandler(async (event) => {
         })
     }
 
-    // search user role
-    const user = await prisma.user.findUnique({
-        where: { username: username },
-        include: { role: true } 
+    // search user role (mendukung login via username, email, atau nomor_hp pegawai)
+    const user = await prisma.user.findFirst({
+        where: {
+            OR: [
+                { username: username },
+                { email: username },
+                { pegawai: { nomor_hp: username } }
+            ]
+        },
+        include: { role: true, pegawai: true } 
     })
 
     // check active or disabled user
@@ -57,7 +63,7 @@ export default defineEventHandler(async (event) => {
             role_name: user.role?.nama_role
         },
         secretKey,
-        { expiresIn: '3m' } 
+        { expiresIn: '7d' } // JWT diset 7 hari karena expired 3 menit di-handle secara idle-timeout di frontend
     )
 
     // save last login time

@@ -264,22 +264,22 @@
             data-bs-toggle="dropdown"
           >
             <span class="bg-primary text-white avatar rounded-circle">
-              {{ getInitials("User Name") }}
+              {{ currentUser ? getInitials(currentUser.name) : 'U' }}
             </span>
             <div class="d-none d-xl-block ps-2">
-              <div class="fw-bold">USER NAME</div>
-              <div class="mt-1 small text-primary">USER ROLE</div>
+              <div class="fw-bold">{{ currentUser ? currentUser.name : 'USER NAME' }}</div>
+              <div class="mt-1 small text-primary">{{ currentUser ? currentUser.role : 'USER ROLE' }}</div>
             </div>
           </a>
           <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-            <a href="?page=profile" class="dropdown-item"
-              ><i class="bi bi-person me-2"></i> My Profile</a
+            <NuxtLink to="/profile" class="dropdown-item"
+              ><i class="bi bi-person me-2"></i> My Profile</NuxtLink
             >
-            <a href="?page=change-password" class="dropdown-item"
-              ><i class="bi bi-key me-2"></i> Change Password</a
+            <NuxtLink to="/profile/change-password" class="dropdown-item"
+              ><i class="bi bi-key me-2"></i> Change Password</NuxtLink
             >
             <div class="dropdown-divider"></div>
-            <a href="logout.php" class="dropdown-item text-danger"
+            <a href="#" @click.prevent="handleLogout" class="dropdown-item text-danger"
               ><i class="bi bi-box-arrow-right me-2"></i> Logout</a
             >
           </div>
@@ -290,6 +290,37 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue';
+
 const { toggleTheme } = useTheme();
 const { toggleSidebar } = useSidebar();
+
+const tokenCookie = useCookie('token');
+const currentUser = ref(null);
+
+onMounted(() => {
+  if (tokenCookie.value) {
+    try {
+      const payload = JSON.parse(atob(tokenCookie.value.split('.')[1]));
+      currentUser.value = {
+        name: payload.username || 'User',
+        role: payload.role_name || 'Role'
+      };
+    } catch (e) {
+      console.error('Failed to parse token in header');
+    }
+  }
+});
+
+const getInitials = (name) => {
+  if (!name) return 'U';
+  return name.substring(0, 2).toUpperCase();
+};
+
+const handleLogout = () => {
+  useCookie('token').value = null;
+  useCookie('rememberMe').value = null;
+  useCookie('userPermissions').value = null;
+  navigateTo('/login');
+};
 </script>

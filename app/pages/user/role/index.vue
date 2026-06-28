@@ -5,10 +5,7 @@
         <!-- Filter Role -->
         <select name="" id="" class="form-select" style="width: 180px">
           <option value="">Semua Role</option>
-          <option value="">Super Admin</option>
-          <option value="">Admin</option>
-          <option value="">Marketing</option>
-          <option value="">Finance</option>
+          <option v-for="item in listRole" :key="item.id" :value="item.id">{{ item.nama_role }}</option>
         </select>
 
         <!-- Search -->
@@ -30,12 +27,11 @@
             <th class="text-center">Aksi</th>
           </tr>
         </thead>
-        <tbody v-for="(item, index) in manajemenRole" :key="item.id">
+        <tbody v-for="(item, index) in listRole" :key="item.id">
           <tr>
             <td class="text-center">{{ index + 1 }}</td>
-            <td>{{ item.role }}</td>
-            <td>{{ item.deskripsi }}</td>
-            <td class="text-center">
+            <td>{{ item.nama_role }}</td>
+            <td>-</td> <td class="text-center">
               <NuxtLink
                 :to="`role/hak-akses/${item.id}`"
                 class="btn btn-sm btn-primary"
@@ -43,6 +39,9 @@
               </NuxtLink>
             </td>
           </tr>
+        </tbody>
+        <tbody v-if="pending">
+          <tr><td colspan="4" class="text-center py-3">Memuat data...</td></tr>
         </tbody>
       </table>
     </div>
@@ -89,5 +88,13 @@ useSeoMeta({
 });
 
 import { IconSearch } from "@tabler/icons-vue";
-import { manajemenRole } from "~/data/manajemen-role.js";
+
+const token = useCookie('token');
+
+// get data dari API
+const { data: response, pending } = await useFetch('/api/user/role', {
+  headers: { Authorization: `Bearer ${token.value}` }
+});
+
+const listRole = computed(() => response.value?.data || []);
 </script>

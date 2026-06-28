@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
             const hari_kerja = parseInt(data_hari_kerja[p.id.toString()]) || 0
 
             // Lewati jika hari kerjanya 0 (misal: cuti sebulan penuh)
-            if (hari_kerja === 0) continue
+            if (hari_kerja < 19) continue
 
             // Jarak default jika belum diset di database adalah 0
             const jarak_aktual = p.jarak_rumah_kantor || 0
@@ -53,7 +53,7 @@ export default defineEventHandler(async (event) => {
             // LOGIKA BATAS KILOMETER
             let jarak_dihitung = jarak_aktual
             if (jarak_dihitung < setting.min_kilometer) {
-                jarak_dihitung = setting.min_kilometer
+                continue
             } else if (jarak_dihitung > setting.max_kilometer) {
                 jarak_dihitung = setting.max_kilometer
             }
@@ -75,6 +75,7 @@ export default defineEventHandler(async (event) => {
             })
         }
 
+        
         const hasilGenerate = await prisma.$transaction(async (tx) => {
             // rekap bulanan
             const tunjanganBaru = await tx.tunjanganBulan.create({
@@ -97,12 +98,20 @@ export default defineEventHandler(async (event) => {
 
             return tunjanganBaru
         })
-
-        return {
-            status: 'success',
-            message: `Berhasil men-generate tunjangan untuk ${total_penerima} pegawai`,
-            data: hasilGenerate
+        
+        if (detailTunjanganData.length === 0) {
+            return { 
+                status: 'success', 
+                message: 'Tidak ada pegawai yang memenuhi syarat (min 19 hari kerja & jarak > 5km).' 
+            }
+        } else {
+            return {
+                status: 'success',
+                message: `Berhasil men-generate tunjangan untuk ${total_penerima} pegawai`,
+                data: hasilGenerate
+            }
         }
+
     } catch (error: any) {
         console.error(error)
         throw createError({ statusCode: error.statusCode || 500, statusMessage: error.statusMessage || 'Terjadi kesalahan saat kalkulasi' })
