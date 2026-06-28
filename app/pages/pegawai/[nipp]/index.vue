@@ -232,6 +232,10 @@ const { data: response } = await useFetch(`/api/pegawai/${nip}`, {
   headers: { Authorization: `Bearer ${token.value}` }
 })
 
+if (!response.value?.data) {
+  navigateTo('/pegawai')
+}
+
 const pegawai = computed(() => response.value?.data || {})
 
 const { goBack } = useGoBack();

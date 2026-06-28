@@ -88,6 +88,10 @@ const { data: response, pending } = await useFetch(`/api/tunjangan/${idTunjangan
   headers: { Authorization: `Bearer ${token.value}` }
 });
 
+if (!response.value?.data) {
+  navigateTo('/tunjangan/transport');
+}
+
 const tunjangan = computed(() => response.value?.data || null);
 
 const sortBy = ref('nama');
