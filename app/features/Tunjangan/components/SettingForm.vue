@@ -54,7 +54,11 @@ const simpanSetting = async () => {
   try {
     await $fetch('/api/tunjangan/setting', { method: 'POST', body: formData.value });
     alert("Setting berhasil disimpan!");
-  } catch (e) { alert("Gagal simpan"); }
+  } catch (error) { 
+    console.error(error);
+    const msg = error?.data?.statusMessage || error?.message || "Gagal menyimpan setting";
+    alert(msg); 
+  }
   finally { isLoading.value = false; }
 };
 

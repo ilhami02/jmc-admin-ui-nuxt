@@ -353,9 +353,10 @@ const submitData = async () => {
     goBack(); // Kembali ke halaman daftar
   } catch (error) {
     console.error("Gagal menyimpan:", error);
-    alert("Terjadi kesalahan saat menyimpan data.");
+    const msg = error?.data?.statusMessage || error?.message || "Terjadi kesalahan saat menyimpan data.";
+    alert(msg);
   }
-  };
+};
 
   // Autocomplete field kecamatan, kabupaten, provinsi
   const kecamatanQuery = ref(""); 

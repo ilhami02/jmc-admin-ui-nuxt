@@ -198,7 +198,7 @@
                 <ul
                   v-if="showSuggestions && suggestions.length > 0"
                   class="list-group"
-                  style="position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"
+                  style="position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background-color: #ffffff;"
                 >
                   <!--
                     Setiap item suggestion bisa diklik.
@@ -259,7 +259,7 @@
                   password acak memenuhi aturan (huruf besar, kecil, angka, karakter khusus)
                 - Jika user ingin ketik manual → validasi onkeyup
               -->
-              <div class="mb-3" v-if="!isEdit">
+              <div class="mb-3">
                 <label class="form-label required">Password</label>
                 <div class="input-group">
                   <input
@@ -267,7 +267,7 @@
                     class="form-control"
                     v-model="formData.password"
                     @keyup="onPasswordKeyup"
-                    placeholder="Generate atau ketik manual"
+                    :placeholder="isEdit ? 'Kosongkan jika tidak ingin mengubah password' : 'Generate atau ketik manual'"
                     :class="{ 'is-invalid': passwordError, 'is-valid': passwordValid }"
                   />
                   <!--
@@ -327,7 +327,7 @@
                 <ul
                   v-if="showJabatanDropdown"
                   class="list-group"
-                  style="position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"
+                  style="position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background-color: #ffffff;"
                 >
                   <li
                     v-for="j in filteredJabatan"
@@ -360,7 +360,7 @@
                 <ul
                   v-if="showDepartemenDropdown"
                   class="list-group"
-                  style="position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"
+                  style="position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background-color: #ffffff;"
                 >
                   <li
                     v-for="d in filteredDepartemen"

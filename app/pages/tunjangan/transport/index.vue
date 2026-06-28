@@ -191,7 +191,7 @@ const generateTunjangan = async () => {
     
   } catch (error) {
     console.error(error);
-    alert(error.response?._data?.statusMessage || "Terjadi kesalahan saat menghitung tunjangan.");
+    alert(error?.data?.statusMessage || error?.message || "Terjadi kesalahan saat menghitung tunjangan.");
   } finally {
     isGenerating.value = false;
   }

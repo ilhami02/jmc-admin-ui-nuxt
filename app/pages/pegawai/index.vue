@@ -68,8 +68,9 @@ const hitungMasaKerja = (tanggalMasuk) => {
       // console.log("Data berhasil dihapus!");
       alert("Berhasil menghapud data pegawai!.");
     } catch (error) {
-      // console.error("Gagal menghapus data:", error);
-      alert("Gagal menghapus data pegawai.");
+      console.error("Gagal menghapus data:", error);
+      const msg = error?.data?.statusMessage || error?.message || "Gagal menghapus data pegawai.";
+      alert(msg);
     }
   };
 </script>
