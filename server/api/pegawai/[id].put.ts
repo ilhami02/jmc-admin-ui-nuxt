@@ -88,6 +88,7 @@ export default defineEventHandler(async (event) => {
                     tanggal_masuk: body.tanggal_masuk ? new Date(body.tanggal_masuk) : undefined,
                     id_jabatan: body.id_jabatan ? parseInt(body.id_jabatan) : undefined,
                     id_departemen: body.id_departemen ? parseInt(body.id_departemen) : undefined,
+                    usia: body.usia ? parseInt(body.usia) : undefined,
                     status: body.status,
                     pendidikan: {
                         create: dataPendidikan.map((p: any) => ({

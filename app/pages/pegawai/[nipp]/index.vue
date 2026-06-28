@@ -70,7 +70,7 @@
             <div class="col-md-6">
               <div class="datagrid-item">
                 <div class="datagrid-title">Usia</div>
-                <div class="datagrid-content">{{ pegawai.usia }} tahun</div>
+                <div class="datagrid-content">{{ pegawai.usia }} Tahun</div>
               </div>
             </div>
 
