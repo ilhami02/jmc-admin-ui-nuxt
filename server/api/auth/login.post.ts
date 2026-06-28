@@ -18,13 +18,20 @@ export default defineEventHandler(async (event) => {
         })
     }
 
+    // Normalisasi nomor HP: jika berawalan '08', ubah menjadi format '+628'
+    let phoneQuery = username
+    if (username.startsWith('08')) {
+        phoneQuery = '+628' + username.slice(2)
+    }
+
     // search user role (mendukung login via username, email, atau nomor_hp pegawai)
     const user = await prisma.user.findFirst({
         where: {
             OR: [
                 { username: username },
                 { email: username },
-                { pegawai: { nomor_hp: username } }
+                { pegawai: { nomor_hp: username } },
+                { pegawai: { nomor_hp: phoneQuery } }
             ]
         },
         include: { role: true, pegawai: true } 
