@@ -412,6 +412,22 @@ const submitData = async () => {
     // }
   });
 
+  // Watcher: hitung usia otomatis saat tanggal_lahir diisi
+  watch(() => formData.value.tanggal_lahir, (newVal) => {
+    if (newVal) {
+      const birthDate = new Date(newVal);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      formData.value.usia = age;
+    } else {
+      formData.value.usia = 0;
+    }
+  });
+
   // Fungsi pencarian
   const searchKecamatan = async () => {
     if (kecamatanQuery.value.length >= 3) {
