@@ -353,6 +353,22 @@ onMounted(() => {
 const handleUploadFoto = (event) => {
   const file = event.target.files[0];
   if (file) {
+    // Validasi tipe file (hanya gambar)
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      alert("Format file tidak diizinkan! Harap pilih file foto (JPG, JPEG, atau PNG).");
+      event.target.value = ''; // Reset input
+      return;
+    }
+
+    // Validasi ukuran maksimal 2MB
+    const maxSize = 2 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert("Ukuran foto terlalu besar! Maksimal 2MB.");
+      event.target.value = ''; // Reset input
+      return;
+    }
+
     fileFoto.value = file;
     // Buat URL sementara untuk preview gambar
     previewFoto.value = URL.createObjectURL(file);
