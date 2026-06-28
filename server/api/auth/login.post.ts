@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
     // create JWT token
     const secretKey = process.env.JWT_SECRET || 'fallback_secret'
     const roleName = user.role?.nama_role
-    const payload = { id: user.id, username: user.username, id_role: user.id_role, role_name: roleName }
+    const payload = { id: user.id, username: user.username, nama: user.nama, id_role: user.id_role, role_name: roleName }
     const token = jwt.sign(payload, secretKey, { expiresIn: '7d' })
 
     // Rekam log aktivitas login

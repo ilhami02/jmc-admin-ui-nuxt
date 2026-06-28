@@ -7,10 +7,88 @@ useSeoMeta({
   title: "Dashboard",
 });
 
-import { totalStatistik, dataPegawaiTerbaru } from "@/data/dashboard.js";
+import { ref, computed } from 'vue';
+import { 
+  IconUsers, 
+  IconUserCheck, 
+  IconUserMinus, 
+  IconUserScan 
+} from '@tabler/icons-vue';
 
-const statusPegawaiSeries = [75, 30, 19];
-const genderPegawaiSeries = [100, 24];
+const token = useCookie('token');
+const currentUser = ref(null);
+
+if (import.meta.client) {
+  try {
+    if (token.value) {
+      const payload = token.value.split('.')[1];
+      currentUser.value = JSON.parse(atob(payload));
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// Fetch dashboard stats
+const { data: resStats, pending } = await useFetch('/api/dashboard/stats', {
+  headers: {
+    Authorization: `Bearer ${token.value}`
+  }
+});
+
+const stats = computed(() => resStats.value?.data || {
+  totalPegawai: 0,
+  totalKontrak: 0,
+  totalTetap: 0,
+  totalMagang: 0,
+  totalPria: 0,
+  totalWanita: 0,
+  pegawaiTerbaru: []
+});
+
+const dataPegawaiTerbaru = computed(() => stats.value.pegawaiTerbaru);
+
+const isManager = computed(() => currentUser.value?.role_name === 'Manager HRD');
+const userRoleName = computed(() => currentUser.value?.role_name || 'Unknown');
+const userFullName = computed(() => currentUser.value?.nama || currentUser.value?.username || 'Pengguna');
+
+const totalStatistik = computed(() => [
+  {
+    title: "Total Pegawai",
+    value: stats.value.totalPegawai,
+    icon: IconUsers,
+    backgroundColor: "#206bc4",
+  },
+  {
+    title: "Total Pegawai Kontrak",
+    value: stats.value.totalKontrak,
+    icon: IconUserMinus,
+    backgroundColor: "#4299e1",
+  },
+  {
+    title: "Total Pegawai Tetap",
+    value: stats.value.totalTetap,
+    icon: IconUserCheck,
+    backgroundColor: "#2fb344",
+  },
+  {
+    title: "Total Peserta Magang",
+    value: stats.value.totalMagang,
+    icon: IconUserScan,
+    backgroundColor: "#f76707",
+  }
+]);
+
+const statusPegawaiSeries = computed(() => [
+  stats.value.totalKontrak,
+  stats.value.totalTetap,
+  stats.value.totalMagang
+]);
+
+const genderPegawaiSeries = computed(() => [
+  stats.value.totalPria,
+  stats.value.totalWanita
+]);
 
 const statusPegawaiOptions = {
   chart: { type: "donut", height: 200 },
@@ -35,8 +113,8 @@ const genderPegawaiOptions = {
 
 <template>
   <div class="row g-3">
-    <!-- Card Greeting -->
-    <div class="col-md-3">
+    <!-- Card Greeting (Manager HRD) -->
+    <div class="col-md-3" v-if="isManager">
       <div class="card bg-dark h-100 position-relative">
         <div class="card-body">
           <div class="text-center">
@@ -47,7 +125,7 @@ const genderPegawaiOptions = {
             />
           </div>
           <h3 class="card-title text-white">
-            Halo, selamat datang Budi Purwanto di Aplikasi Kepegawaian
+            Selamat Datang {{ userFullName }} - {{ userRoleName }}
           </h3>
           <p class="text-white fw-lighter fst-italic">
             "Fokuskan tujuan yang ingin didapat, jangan biarkan faktor lain
@@ -56,7 +134,9 @@ const genderPegawaiOptions = {
         </div>
       </div>
     </div>
-    <div class="col-md-9">
+
+    <!-- Stats Manager HRD -->
+    <div class="col-md-9" v-if="isManager">
       <div class="row g-3">
         <!-- Card Total -->
         <div class="col-12">
@@ -135,8 +215,8 @@ const genderPegawaiOptions = {
       </div>
     </div>
 
-    <!-- Pegawai Terbaru -->
-    <div class="col-12">
+    <!-- Pegawai Terbaru (Manager HRD) -->
+    <div class="col-12" v-if="isManager">
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">Data Pegawai Terbaru</h3>
@@ -183,6 +263,17 @@ const genderPegawaiOptions = {
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tampilan Untuk Role Selain Manager HRD -->
+    <div class="col-12" v-if="!isManager">
+      <div class="card bg-dark">
+        <div class="card-body text-center py-5">
+          <h3 class="text-white" style="font-size: 1.8rem; margin: 0;">
+            Selamat Datang {{ userFullName }} - {{ userRoleName }}
+          </h3>
         </div>
       </div>
     </div>

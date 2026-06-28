@@ -44,12 +44,12 @@
             <tr>
               <th width="5">No</th>
               <th width="15">Action</th>
-              <th>Nama Pengguna</th>
-              <th>Username</th>
+              <th @click="handleSort('nama')" style="cursor:pointer">Nama Pengguna <IconChevronUp v-if="sortBy==='nama' && sortOrder==='asc'" size="14"/><IconChevronDown v-if="sortBy==='nama' && sortOrder==='desc'" size="14"/></th>
+              <th @click="handleSort('username')" style="cursor:pointer">Username <IconChevronUp v-if="sortBy==='username' && sortOrder==='asc'" size="14"/><IconChevronDown v-if="sortBy==='username' && sortOrder==='desc'" size="14"/></th>
               <th>Jabatan</th>
               <th>Departemen</th>
               <th>Role</th>
-              <th>Status</th>
+              <th @click="handleSort('status')" style="cursor:pointer">Status <IconChevronUp v-if="sortBy==='status' && sortOrder==='asc'" size="14"/><IconChevronDown v-if="sortBy==='status' && sortOrder==='desc'" size="14"/></th>
             </tr>
           </thead>
           <tbody v-for="(item, index) in listUser" :key="item.id">
@@ -100,7 +100,10 @@
               <td>{{ item.pegawai?.jabatan?.nama || '-' }}</td>
               <td>{{ item.pegawai?.departemen?.nama || '-' }}</td>
               <td>{{ item.role?.nama_role || '-' }}</td>
-              <td>{{ item.disabled === 0 ? "Aktif" : "Tidak Aktif" }}</td>
+              <td>
+                <IconCheck v-if="item.disabled === 0" stroke="2" class="text-success" />
+                <IconX v-else stroke="2" class="text-danger" />
+              </td>
             </tr>
           </tbody>
           <tbody v-if="pending">
@@ -518,7 +521,19 @@ useSeoMeta({
   title: "Manajemen User",
 });
 
-import { IconPencil, IconPlus, IconSearch, IconTrash, IconEye, IconEyeOff, IconRefresh } from "@tabler/icons-vue";
+import { 
+  IconPencil, 
+  IconPlus, 
+  IconSearch, 
+  IconTrash, 
+  IconEye, 
+  IconEyeOff, 
+  IconRefresh,
+  IconCheck,
+  IconX,
+  IconChevronUp,
+  IconChevronDown
+} from "@tabler/icons-vue";
 import { ref, computed, watch } from 'vue';
 
 // ====================================================================
@@ -569,9 +584,42 @@ if (import.meta.client) {
 
 // Fetch semua user (dengan relasi role dan pegawai)
 const { data: resUser, pending, refresh } = await useFetch('/api/user');
-// computed → membuat "turunan" data yang otomatis update ketika sumbernya berubah
-// Jika resUser.value?.data ada → pakai, jika null → pakai array kosong []
-const listUser = computed(() => resUser.value?.data || []);
+
+const sortBy = ref('nama');
+const sortOrder = ref('asc');
+
+const handleSort = (column) => {
+  if (sortBy.value === column) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = column;
+    sortOrder.value = 'asc';
+  }
+};
+
+const listUser = computed(() => {
+  let data = resUser.value?.data || [];
+  if (data.length > 0) {
+    data = [...data].sort((a, b) => {
+      let valA, valB;
+      if (sortBy.value === 'nama') {
+        valA = a.nama.toLowerCase();
+        valB = b.nama.toLowerCase();
+      } else if (sortBy.value === 'username') {
+        valA = a.username.toLowerCase();
+        valB = b.username.toLowerCase();
+      } else if (sortBy.value === 'status') {
+        valA = a.disabled;
+        valB = b.disabled;
+      }
+      
+      if (valA < valB) return sortOrder.value === 'asc' ? -1 : 1;
+      if (valA > valB) return sortOrder.value === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+  return data;
+});
 
 // Fetch semua role (untuk dropdown Role dan filter tabel)
 const { data: resRole } = await useFetch('/api/user/role');

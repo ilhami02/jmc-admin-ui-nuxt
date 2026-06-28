@@ -15,69 +15,180 @@ import {
   IconTrash,
   IconFileDescription,
   IconCloudDownload,
+  IconChevronUp,
+  IconChevronDown,
+  IconFileTypeXls,
+  IconFileTypePdf
 } from "@tabler/icons-vue";
-// import { dataPegawai } from "~/data/data-pegawai.js";
+import { formatDateID } from "~/utils/formatDate.js";
+import { ref, computed, watch, onMounted } from 'vue';
+
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const token = useCookie('token') // get JWT
 
+// STATE
+const page = ref(1);
+const limit = ref(10);
+const search = ref('');
+const sortBy = ref('created_at');
+const sortOrder = ref('desc');
+const jabatanFilter = ref('');
+const masaKerjaMin = ref('');
+const masaKerjaMax = ref('');
+const statusKontrak = ref('');
+
+// JABATAN LOAD
+const listJabatan = ref([]);
+const loadJabatan = async () => {
+  try {
+    const res = await $fetch('/api/master-data?tipe=Jabatan', { headers: { Authorization: `Bearer ${token.value}` } });
+    listJabatan.value = res.data || [];
+  } catch(e) {}
+}
+
+// FETCH
 const { data: response, pending, refresh } = await useFetch('/api/pegawai', {
-  headers: {
-    Authorization: `Bearer ${token.value}`
+  headers: { Authorization: `Bearer ${token.value}` },
+  query: {
+    page, limit, search, sort_by: sortBy, sort_order: sortOrder,
+    jabatan: jabatanFilter, masa_kerja_min: masaKerjaMin,
+    masa_kerja_max: masaKerjaMax, status_kontrak: statusKontrak
   }
-})
-
-const pegawaiList = computed(() => response.value?.data || [])
-
-import { formatDateID } from "~/utils/formatDate.js";
+});
+const pegawaiList = computed(() => response.value?.data || []);
+const meta = computed(() => response.value?.meta || { totalPages: 1, page: 1, totalRows: 0 });
 
 const hitungMasaKerja = (tanggalMasuk) => {
   if (!tanggalMasuk) return 0;
-  
   const tglMasuk = new Date(tanggalMasuk);
   const sekarang = new Date();
-  
   let selisihTahun = sekarang.getFullYear() - tglMasuk.getFullYear();
-  
-  // Kurangi 1 tahun jika bulan/hari saat ini belum melewati bulan/hari masuk kerja
-  if (
-    sekarang.getMonth() < tglMasuk.getMonth() || 
-    (sekarang.getMonth() === tglMasuk.getMonth() && sekarang.getDate() < tglMasuk.getDate())
-  ) {
+  if (sekarang.getMonth() < tglMasuk.getMonth() || (sekarang.getMonth() === tglMasuk.getMonth() && sekarang.getDate() < tglMasuk.getDate())) {
     selisihTahun--;
   }
-  
   return selisihTahun;
-  };
+};
 
-  // BUTTON DELETE PEGAWAI
-  // save id pegawai
-  const selectedId = ref(null);
+// SORT
+const handleSort = (column) => {
+  if (sortBy.value === column) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = column;
+    sortOrder.value = 'asc';
+  }
+};
 
-  const hapusData = async () => {
-    if (!selectedId.value) return;
+// BULK
+const selectedItems = ref([]);
+const isAllSelected = computed(() => {
+  return pegawaiList.value.length > 0 && selectedItems.value.length === pegawaiList.value.length;
+});
+const toggleSelectAll = (e) => {
+  if (e.target.checked) selectedItems.value = pegawaiList.value.map(p => p.id);
+  else selectedItems.value = [];
+};
+watch(pegawaiList, () => { selectedItems.value = []; });
 
-    try {
-      await $fetch(`/api/pegawai/${selectedId.value}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token.value}`
-        }
-      });
-      
-      refresh(); 
-      // console.log("Data berhasil dihapus!");
-      alert("Berhasil menghapud data pegawai!.");
-    } catch (error) {
-      console.error("Gagal menghapus data:", error);
-      const msg = error?.data?.statusMessage || error?.message || "Gagal menghapus data pegawai.";
-      alert(msg);
-    }
-  };
+const statusUbah = ref('Aktif');
+const bulkUpdateStatus = async () => {
+  if (!selectedItems.value.length) return;
+  try {
+    await $fetch('/api/pegawai/bulk-status', {
+      method: 'PUT', headers: { Authorization: `Bearer ${token.value}` },
+      body: { ids: selectedItems.value, status: statusUbah.value }
+    });
+    alert(`Status diubah menjadi ${statusUbah.value}`);
+    selectedItems.value = [];
+    refresh();
+  } catch(e) { alert('Gagal mengubah status'); }
+};
+
+const bulkDelete = async () => {
+  if (!selectedItems.value.length) return;
+  if(!confirm(`Hapus ${selectedItems.value.length} data?`)) return;
+  try {
+    await $fetch('/api/pegawai/bulk-delete', {
+      method: 'DELETE', headers: { Authorization: `Bearer ${token.value}` },
+      body: { ids: selectedItems.value }
+    });
+    alert('Data dihapus');
+    selectedItems.value = [];
+    refresh();
+  } catch(e) { alert('Gagal menghapus'); }
+};
+
+// DELETE
+const selectedId = ref(null);
+const hapusData = async () => {
+  if (!selectedId.value) return;
+  try {
+    await $fetch(`/api/pegawai/${selectedId.value}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token.value}` } });
+    alert("Berhasil menghapus data!");
+    refresh(); 
+  } catch (error) { alert("Gagal menghapus data."); }
+};
+
+// EXPORT
+const exportExcel = () => {
+  if (pegawaiList.value.length === 0) return alert('Tidak ada data');
+  const data = pegawaiList.value.map((p, index) => ({
+    No: (meta.value.page - 1) * limit.value + index + 1,
+    NIP: p.nip, Nama: p.nama_pegawai, Jabatan: p.jabatan?.nama || '-',
+    'Tanggal Masuk': formatDateID(p.tanggal_masuk), 'Masa Kerja': hitungMasaKerja(p.tanggal_masuk)
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Pegawai");
+  XLSX.writeFile(wb, "Data_Pegawai.xlsx");
+};
+
+const exportPDF = () => {
+  if (pegawaiList.value.length === 0) return alert('Tidak ada data');
+  const doc = new jsPDF();
+  doc.text("Daftar Pegawai", 14, 15);
+  const tableData = pegawaiList.value.map((p, index) => [
+    (meta.value.page - 1) * limit.value + index + 1, p.nip, p.nama_pegawai, p.jabatan?.nama || '-', formatDateID(p.tanggal_masuk), hitungMasaKerja(p.tanggal_masuk) + ' Thn'
+  ]);
+  doc.autoTable({ head: [['No', 'NIP', 'Nama', 'Jabatan', 'Tgl Masuk', 'Masa Kerja']], body: tableData, startY: 20 });
+  doc.save("Data_Pegawai.pdf");
+};
+
+const exportPdfDetail = (item) => {
+  const doc = new jsPDF();
+  doc.text(`Detail Pegawai`, 14, 15);
+  doc.text(`Nama : ${item.nama_pegawai}`, 14, 30);
+  doc.text(`NIP  : ${item.nip}`, 14, 40);
+  doc.text(`Jabatan : ${item.jabatan?.nama || '-'}`, 14, 50);
+  doc.save(`Detail_${item.nip}.pdf`);
+};
+
+onMounted(() => { loadJabatan(); });
 </script>
 
 <template>
   <NuxtLayout name="default">
     <template #actions>
+      <!-- Tambahan: Bulk Actions (hanya tampil jika ada baris terpilih) -->
+      <div v-if="selectedItems.length > 0" class="d-inline-flex gap-2 me-2 align-items-center">
+        <select class="form-select form-select-sm" style="width: 120px" v-model="statusUbah">
+          <option value="Aktif">Aktif</option>
+          <option value="Nonaktif">Nonaktif</option>
+        </select>
+        <button class="btn btn-primary btn-sm" @click="bulkUpdateStatus">Ubah Status</button>
+        <button class="btn btn-danger btn-sm" @click="bulkDelete">
+          <IconTrash stroke="{2}" size="16" class="me-1" /> Hapus
+        </button>
+      </div>
+      <!-- Tambahan: Export Buttons -->
+      <div class="d-inline-flex gap-2 me-2">
+        <button class="btn btn-outline-success" @click="exportExcel">Excel</button>
+        <button class="btn btn-outline-danger" @click="exportPDF">PDF</button>
+      </div>
+
       <NuxtLink to="/pegawai/form" class="btn btn-primary">
         <IconPlus stroke="{3}" size="20" />Tambah
       </NuxtLink>
@@ -88,24 +199,21 @@ const hitungMasaKerja = (tanggalMasuk) => {
           <!-- Masa Kerja -->
           <div class="d-flex align-items-center gap-1">
             <span class="text-nowrap">Masa Kerja</span>
-            <input type="number" class="form-control" style="width: 60px" />
+            <input type="number" class="form-control" style="width: 60px" v-model="masaKerjaMin" placeholder="Min" />
             -
-            <input type="number" class="form-control" style="width: 60px" />
+            <input type="number" class="form-control" style="width: 60px" v-model="masaKerjaMax" placeholder="Max" />
           </div>
           <!-- Filter Jabatan -->
-          <select name="" id="" class="form-select" style="width: 180px">
+          <select class="form-select" style="width: 180px" v-model="jabatanFilter">
             <option value="">Semua Jabatan</option>
-            <option value="">Programmer</option>
-            <option value="">System Analyst</option>
-            <option value="">Akuntan</option>
-            <option value="">Manager Produksi</option>
+            <option v-for="j in listJabatan" :key="j.id" :value="j.id">{{ j.nama }}</option>
           </select>
 
           <!-- Filter Kontrak -->
-          <select name="" id="" class="form-select" style="width: 180px">
+          <select name="" id="" class="form-select" style="width: 180px" v-model="statusKontrak">
             <option value="">Status Kontrak</option>
-            <option value="">PKWTT</option>
-            <option value="">PKWT</option>
+            <option value="PKWTT">PKWTT</option>
+            <option value="PKWT">PKWT</option>
           </select>
 
           <!-- Search -->
@@ -114,6 +222,7 @@ const hitungMasaKerja = (tanggalMasuk) => {
               type="text"
               class="form-control"
               placeholder="Cari Data ..."
+              v-model="search"
             />
             <button class="btn" type="button">
               <IconSearch stroke="{2}" />
@@ -125,18 +234,24 @@ const hitungMasaKerja = (tanggalMasuk) => {
         <table class="table table-vcenter">
           <thead>
             <tr>
+              <th width="10" class="text-center">
+                <input type="checkbox" class="form-check-input" :checked="isAllSelected" @change="toggleSelectAll" />
+              </th>
               <th width="5">No</th>
               <th width="15" class="text-center">Aksi</th>
-              <th>NIP</th>
-              <th>Nama</th>
-              <th>Jabatan</th>
-              <th>Tanggal Masuk</th>
-              <th>Masa Kerja</th>
+              <th @click="handleSort('nip')" style="cursor:pointer">NIP <IconChevronUp v-if="sortBy==='nip' && sortOrder==='asc'" size="14"/><IconChevronDown v-if="sortBy==='nip' && sortOrder==='desc'" size="14"/></th>
+              <th @click="handleSort('nama')" style="cursor:pointer">Nama <IconChevronUp v-if="sortBy==='nama' && sortOrder==='asc'" size="14"/><IconChevronDown v-if="sortBy==='nama' && sortOrder==='desc'" size="14"/></th>
+              <th @click="handleSort('jabatan')" style="cursor:pointer">Jabatan <IconChevronUp v-if="sortBy==='jabatan' && sortOrder==='asc'" size="14"/><IconChevronDown v-if="sortBy==='jabatan' && sortOrder==='desc'" size="14"/></th>
+              <th @click="handleSort('tanggal_masuk')" style="cursor:pointer">Tanggal Masuk <IconChevronUp v-if="sortBy==='tanggal_masuk' && sortOrder==='asc'" size="14"/><IconChevronDown v-if="sortBy==='tanggal_masuk' && sortOrder==='desc'" size="14"/></th>
+              <th @click="handleSort('masa_kerja')" style="cursor:pointer">Masa Kerja <IconChevronUp v-if="sortBy==='masa_kerja' && sortOrder==='asc'" size="14"/><IconChevronDown v-if="sortBy==='masa_kerja' && sortOrder==='desc'" size="14"/></th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(item, index) in pegawaiList" :key="item.id">
-              <td class="text-center">{{ index + 1 }}</td>
+              <td class="text-center">
+                <input type="checkbox" class="form-check-input" :value="item.id" v-model="selectedItems" />
+              </td>
+              <td class="text-center">{{ (meta.page - 1) * limit + index + 1 }}</td>
               <td class="text-nowrap">
                 <div class="d-flex">
                   <!-- Aksi Edit -->
@@ -162,11 +277,11 @@ const hitungMasaKerja = (tanggalMasuk) => {
                   </NuxtLink>
 
                   <!-- Aksi Download -->
-                  <a href="#" class="text-dark">
+                  <a href="#" class="text-dark" @click.prevent="exportPdfDetail(item)">
                     <span
                       data-bs-toggle="tooltip"
                       data-bs-placement="bottom"
-                      title="Download"
+                      title="Download PDF Detail"
                     >
                       <IconCloudDownload stroke="{1}" size="20" />
                     </span>
@@ -205,16 +320,21 @@ const hitungMasaKerja = (tanggalMasuk) => {
         </table>
       </div>
       <div class="card-footer d-flex align-items-center">
+        <div class="m-0 text-muted">
+          Menampilkan baris <span>{{ (meta.page - 1) * limit + 1 }}</span> sampai 
+          <span>{{ Math.min(meta.page * limit, meta.totalRows) }}</span> dari 
+          <span>{{ meta.totalRows }}</span> entri
+        </div>
         <ul class="pagination ms-auto m-0">
-          <li class="page-item"><a class="page-link" href="#">1</a></li>
-          <li class="page-item active"><a class="page-link" href="#">2</a></li>
-          <li class="page-item"><a class="page-link" href="#">3</a></li>
-          <li class="page-item"><a class="page-link" href="#">4</a></li>
-          <li class="page-item"><a class="page-link" href="#">5</a></li>
-          <li class="page-item">
-            <a class="page-link" href="#">
+          <li class="page-item" :class="{ disabled: meta.page === 1 }">
+            <a class="page-link" href="#" @click.prevent="page = meta.page - 1">prev</a>
+          </li>
+          <li class="page-item" v-for="p in meta.totalPages" :key="p" :class="{ active: p === meta.page }">
+            <a class="page-link" href="#" @click.prevent="page = p">{{ p }}</a>
+          </li>
+          <li class="page-item" :class="{ disabled: meta.page === meta.totalPages || meta.totalPages === 0 }">
+            <a class="page-link" href="#" @click.prevent="page = meta.page + 1">
               next
-              <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="icon"

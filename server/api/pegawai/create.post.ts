@@ -68,7 +68,8 @@ export default defineEventHandler(async (event) => {
     // fields checking
     const requiredFields = [
         'nip', 'nama_pegawai', 'email', 'nomor_hp', 'tempat_lahir', 
-        'tanggal_lahir', 'status_kawin', 'tanggal_masuk', 'id_jabatan', 'id_departemen'
+        'tanggal_lahir', 'status_kawin', 'tanggal_masuk', 'id_jabatan', 'id_departemen',
+        'jenis_kelamin', 'status_kontrak'
     ];
     for (const field of requiredFields) {
         if (!body[field]) {
@@ -98,6 +99,8 @@ export default defineEventHandler(async (event) => {
                 jarak_rumah_kantor: body.jarak_rumah_kantor ? parseInt(body.jarak_rumah_kantor) : null,
                 tanggal_lahir: new Date(body.tanggal_lahir),
                 status_kawin: body.status_kawin,
+                jenis_kelamin: body.jenis_kelamin,
+                status_kontrak: body.status_kontrak,
                 jumlah_anak: body.jumlah_anak ? parseInt(body.jumlah_anak) : 0,
                 tanggal_masuk: new Date(body.tanggal_masuk),
                 id_jabatan: parseInt(body.id_jabatan),

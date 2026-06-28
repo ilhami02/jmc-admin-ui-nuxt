@@ -140,6 +140,33 @@
               <input type="text" class="form-control" v-model="selectedProvinsi" readonly />
             </div>
 
+            <!-- Jenis Kelamin -->
+            <div class="col-md-12">
+              <div class="form-label">Jenis Kelamin</div>
+              <div>
+                <label class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="jenisKelamin"
+                    value="Pria"
+                    v-model="formData.jenis_kelamin"
+                  />
+                  <span class="form-check-label">Pria</span>
+                </label>
+                <label class="form-check form-check-inline">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="jenisKelamin"
+                    value="Wanita"
+                    v-model="formData.jenis_kelamin"
+                  />
+                  <span class="form-check-label">Wanita</span>
+                </label>
+              </div>
+            </div>
+
             <!-- Status Pernikahan -->
             <div class="col-md-6">
               <div class="form-label">Status Pernikahan</div>
@@ -208,10 +235,19 @@
               </select>
             </div>
 
+            <!-- Status Kontrak -->
+            <div class="col-md-6">
+              <label for="" class="form-label">Status Kontrak</label>
+              <select name="" id="" class="form-select" v-model="formData.status_kontrak">
+                <option value="PKWTT">PKWTT (Tetap)</option>
+                <option value="PKWT">PKWT (Kontrak)</option>
+              </select>
+            </div>
+
             <!-- Status -->
             <div class="col-md-6">
-              <label for="" class="form-label">Status</label>
-              <label class="form-check form-switch form-switch-3">
+              <label for="" class="form-label">Status Pegawai</label>
+              <label class="form-check form-switch form-switch-3 mt-1">
                 <input class="form-check-input" type="checkbox" checked="" true-value="Aktif" false-value="Nonaktif" v-model="formData.status" />
                 <span class="form-check-label">Aktif</span>
               </label>
@@ -256,9 +292,11 @@ const formData = ref({
   id_kecamatan: '',
   id_jabatan: '',
   id_departemen: '',
-  status_kawin: 'Belum Menikah',
+  jenis_kelamin: 'Pria',
+  status_kawin: 'tidak_kawin',
   jumlah_anak: 0,
   tanggal_masuk: '',
+  status_kontrak: 'PKWTT',
   status: 'Aktif',
   pendidikan: [] // Array untuk form pendidikan yang dinamis
 });

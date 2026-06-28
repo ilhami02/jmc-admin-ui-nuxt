@@ -100,3 +100,4 @@ npm install jsonwebtoken
 npm install -D @types/jsonwebtoken
 npm install uuid
 npm install -D @types/uuid
+npm install jspdf jspdf-autotable xlsx

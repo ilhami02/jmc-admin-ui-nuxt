@@ -24,14 +24,14 @@
           <thead>
             <tr>
               <th width="5">No</th>
-              <th>Nama Penerima</th>
-              <th class="text-center">Kilometer</th>
-              <th class="text-center">Jumlah Hari</th>
-              <th class="text-center">Nominal</th>
+              <th @click="handleSort('nama')" style="cursor:pointer">Nama Penerima <IconChevronUp v-if="sortBy==='nama' && sortOrder==='asc'" size="14"/><IconChevronDown v-if="sortBy==='nama' && sortOrder==='desc'" size="14"/></th>
+              <th class="text-center" @click="handleSort('kilometer')" style="cursor:pointer">Kilometer <IconChevronUp v-if="sortBy==='kilometer' && sortOrder==='asc'" size="14"/><IconChevronDown v-if="sortBy==='kilometer' && sortOrder==='desc'" size="14"/></th>
+              <th class="text-center" @click="handleSort('hari')" style="cursor:pointer">Jumlah Hari <IconChevronUp v-if="sortBy==='hari' && sortOrder==='asc'" size="14"/><IconChevronDown v-if="sortBy==='hari' && sortOrder==='desc'" size="14"/></th>
+              <th class="text-center" @click="handleSort('nominal')" style="cursor:pointer">Nominal <IconChevronUp v-if="sortBy==='nominal' && sortOrder==='asc'" size="14"/><IconChevronDown v-if="sortBy==='nominal' && sortOrder==='desc'" size="14"/></th>
             </tr>
           </thead>
           <tbody
-            v-for="(item, index) in tunjangan?.detail_tunjangan"
+            v-for="(item, index) in sortedDetailTunjangan"
             :key="item.id"
           >
             <tr>
@@ -86,7 +86,7 @@ definePageMeta({
   title: "Detail Tunjangan Transport",
 });
 
-import { IconSearch } from "@tabler/icons-vue";
+import { IconSearch, IconChevronUp, IconChevronDown } from "@tabler/icons-vue";
 import { formatRupiah } from "~/utils/formatRupiah.js";
 import { useRoute } from 'vue-router';
 
@@ -100,6 +100,47 @@ const { data: response, pending } = await useFetch(`/api/tunjangan/${idTunjangan
 });
 
 const tunjangan = computed(() => response.value?.data || null);
+
+const sortBy = ref('nama');
+const sortOrder = ref('asc');
+
+const handleSort = (column) => {
+  if (sortBy.value === column) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = column;
+    sortOrder.value = 'asc';
+  }
+};
+
+const sortedDetailTunjangan = computed(() => {
+  if (!tunjangan.value || !tunjangan.value.detail_tunjangan) return [];
+  
+  let data = [...tunjangan.value.detail_tunjangan];
+  
+  data.sort((a, b) => {
+    let valA, valB;
+    if (sortBy.value === 'nama') {
+      valA = (a.pegawai?.nama_pegawai || '').toLowerCase();
+      valB = (b.pegawai?.nama_pegawai || '').toLowerCase();
+    } else if (sortBy.value === 'kilometer') {
+      valA = a.kilometer;
+      valB = b.kilometer;
+    } else if (sortBy.value === 'hari') {
+      valA = a.jumlah_hari;
+      valB = b.jumlah_hari;
+    } else if (sortBy.value === 'nominal') {
+      valA = a.nominal;
+      valB = b.nominal;
+    }
+    
+    if (valA < valB) return sortOrder.value === 'asc' ? -1 : 1;
+    if (valA > valB) return sortOrder.value === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  return data;
+});
 
 const getMonthName = (monthNumber) => {
   if (!monthNumber) return '';

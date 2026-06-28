@@ -129,15 +129,23 @@
             </div>
 
             <!-- Status Pernikahan -->
-            <div class="col-md-6">
+            <div class="col-md-4">
               <div class="datagrid-item">
                 <div class="datagrid-title">Status Pernikahan</div>
                 <div class="datagrid-content">{{ pegawai.status_kawin }}</div>
               </div>
             </div>
 
+            <!-- Jenis Kelamin -->
+            <div class="col-md-4">
+              <div class="datagrid-item">
+                <div class="datagrid-title">Jenis Kelamin</div>
+                <div class="datagrid-content">{{ pegawai.jenis_kelamin || '-' }}</div>
+              </div>
+            </div>
+
             <!-- Jumlah Anak -->
-            <div class="col-md-6">
+            <div class="col-md-4">
               <div class="datagrid-item">
                 <div class="datagrid-title">Jumlah Anak</div>
                 <div class="datagrid-content">{{ pegawai.jumlah_anak }}</div>
@@ -178,10 +186,18 @@
               </div>
             </div>
 
+            <!-- Status Kontrak -->
+            <div class="col-md-6">
+              <div class="datagrid-item">
+                <div class="datagrid-title">Status Kontrak</div>
+                <div class="datagrid-content">{{ pegawai.status_kontrak }}</div>
+              </div>
+            </div>
+
             <!-- Status -->
             <div class="col-md-6">
               <div class="datagrid-item">
-                <div class="datagrid-title">Status</div>
+                <div class="datagrid-title">Status Pegawai</div>
                 <div class="datagrid-content">{{ pegawai.status }}</div>
               </div>
             </div>
