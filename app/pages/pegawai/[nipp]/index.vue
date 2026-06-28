@@ -132,7 +132,7 @@
             <div class="col-md-4">
               <div class="datagrid-item">
                 <div class="datagrid-title">Status Pernikahan</div>
-                <div class="datagrid-content">{{ pegawai.status_kawin }}</div>
+                <div class="datagrid-content">{{ pegawai.status_kawin === 'tidak_kawin' ? 'Tidak Kawin' : pegawai.status_kawin || '-' }}</div>
               </div>
             </div>
 

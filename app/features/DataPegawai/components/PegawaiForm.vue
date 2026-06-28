@@ -192,7 +192,7 @@
             <!-- Jumlah Anak -->
             <div class="col-md-6">
               <label for="" class="form-label">Jumlah Anak</label>
-              <input type="number" min="0" class="form-control" v-model="formData.jumlah_anak" />
+              <input type="number" min="0" class="form-control" v-model="formData.jumlah_anak" :disabled="formData.status_kawin === 'tidak_kawin'" />
             </div>
           </div>
         </div>
@@ -425,6 +425,13 @@ const submitData = async () => {
       formData.value.usia = age;
     } else {
       formData.value.usia = 0;
+    }
+  });
+
+  // Watcher: reset jumlah anak jika status belum menikah
+  watch(() => formData.value.status_kawin, (newVal) => {
+    if (newVal === 'tidak_kawin') {
+      formData.value.jumlah_anak = 0;
     }
   });
 
