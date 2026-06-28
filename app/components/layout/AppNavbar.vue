@@ -30,19 +30,11 @@
 
           <!-- Notification -->
           <div class="nav-item dropdown me-2">
-            <a
-              href="#"
-              class="nav-link px-0"
-              data-bs-toggle="dropdown"
-              tabindex="-1"
-              aria-label="Show notifications"
-            >
+            <a href="#" class="nav-link px-0" data-bs-toggle="dropdown" tabindex="-1" aria-label="Show notifications">
               <i class="ti ti-bell icon"></i>
               <span class="badge bg-red"></span>
             </a>
-            <div
-              class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card"
-            >
+            <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card" style="width: 320px;">
               <div class="card">
                 <div class="card-header">
                   <h3 class="card-title">Notifikasi</h3>
@@ -51,14 +43,42 @@
                   <div class="list-group-item">
                     <div class="row align-items-center">
                       <div class="col-auto">
-                        <span
-                          class="status-dot status-dot-animated bg-red d-block"
-                        ></span>
+                        <span class="status-dot status-dot-animated bg-green d-block"></span>
                       </div>
                       <div class="col text-truncate">
-                        <p class="text-body d-block mb-0">
-                          Belum ada notifikasi.
-                        </p>
+                        <p class="text-body d-block mb-1"><strong>Tunjangan Selesai</strong></p>
+                        <div class="text-secondary mt-n1" style="white-space: normal;">
+                          Perhitungan tunjangan transport bulan Juni 2026 berhasil diselesaikan.
+                        </div>
+                        <small class="text-muted">10 menit yang lalu</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="list-group-item">
+                    <div class="row align-items-center">
+                      <div class="col-auto">
+                        <span class="status-dot status-dot-animated bg-orange d-block"></span>
+                      </div>
+                      <div class="col text-truncate">
+                        <p class="text-body d-block mb-1"><strong>Peringatan Kontrak</strong></p>
+                        <div class="text-secondary mt-n1" style="white-space: normal;">
+                          Masa kontrak PKWT pegawai atas nama <strong>Dimas</strong> akan habis dalam 7 hari.
+                        </div>
+                        <small class="text-muted">2 jam yang lalu</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="list-group-item">
+                    <div class="row align-items-center">
+                      <div class="col-auto">
+                        <span class="status-dot bg-blue d-block"></span>
+                      </div>
+                      <div class="col text-truncate">
+                        <p class="text-body d-block mb-1"><strong>Pembaruan Sistem</strong></p>
+                        <div class="text-secondary mt-n1" style="white-space: normal;">
+                          Tarif tunjangan baru (Rp 500/km) sudah mulai aktif.
+                        </div>
+                        <small class="text-muted">Kemarin</small>
                       </div>
                     </div>
                   </div>
