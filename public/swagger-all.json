@@ -1,0 +1,790 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API Aplikasi Kepegawaian JMC",
+    "description": "Dokumentasi lengkap seluruh API endpoint pada Aplikasi Kepegawaian JMC. Mencakup modul Autentikasi, Dashboard, Data Pegawai, Manajemen User & Role, Tunjangan Transport, Master Data, Log Aktifitas, dan Wilayah.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Tim Magang JMC"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development Server"
+    }
+  ],
+  "tags": [
+    { "name": "Auth", "description": "Login & Logout" },
+    { "name": "Dashboard", "description": "Statistik dashboard" },
+    { "name": "Pegawai", "description": "CRUD Data Pegawai" },
+    { "name": "User", "description": "CRUD Manajemen User" },
+    { "name": "User Role", "description": "Manajemen Role & Hak Akses" },
+    { "name": "Profil", "description": "Profil & Ganti Password user yang login" },
+    { "name": "Tunjangan", "description": "Setting, Generate, & Riwayat Tunjangan Transport" },
+    { "name": "Master Data", "description": "Data Jabatan & Departemen" },
+    { "name": "Log Aktifitas", "description": "Riwayat aktifitas user" },
+    { "name": "Wilayah", "description": "Pencarian data kecamatan/kabupaten" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token JWT dari endpoint login. Format header: Authorization: Bearer <token>"
+      }
+    },
+    "schemas": {
+      "Pegawai": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "nip": { "type": "string", "example": "0025" },
+          "nama_pegawai": { "type": "string", "example": "Ahmad Hendarto" },
+          "foto_pegawai": { "type": "string", "example": "/uploads/photo.jpg" },
+          "email": { "type": "string", "example": "ahmad@mail.com" },
+          "nomor_hp": { "type": "string", "example": "+6281234567890" },
+          "tempat_lahir": { "type": "string", "example": "Jakarta" },
+          "tanggal_lahir": { "type": "string", "format": "date", "example": "1995-05-10" },
+          "status_kawin": { "type": "string", "enum": ["Kawin", "Tidak Kawin"] },
+          "jumlah_anak": { "type": "integer", "example": 2 },
+          "jenis_kelamin": { "type": "string", "enum": ["Pria", "Wanita"] },
+          "status_kontrak": { "type": "string", "enum": ["PKWT", "PKWTT"] },
+          "tanggal_masuk": { "type": "string", "format": "date", "example": "2024-01-15" },
+          "jarak_rumah_kantor": { "type": "integer", "example": 15 },
+          "status": { "type": "string", "enum": ["Aktif", "Nonaktif"] },
+          "usia": { "type": "integer", "example": 30 },
+          "jabatan": { "$ref": "#/components/schemas/MasterData" },
+          "departemen": { "$ref": "#/components/schemas/MasterData" }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "nama": { "type": "string", "example": "Admin HRD" },
+          "username": { "type": "string", "example": "admin_hrd" },
+          "email": { "type": "string", "example": "admin@mail.com" },
+          "disabled": { "type": "integer", "example": 0, "description": "0 = Aktif, 1 = Nonaktif" },
+          "id_role": { "type": "integer", "example": 3 },
+          "id_pegawai": { "type": "integer", "example": 1 },
+          "role": { "$ref": "#/components/schemas/UserRole" },
+          "pegawai": { "$ref": "#/components/schemas/Pegawai" }
+        }
+      },
+      "UserRole": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "nama_role": { "type": "string", "example": "Superadmin" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "MasterData": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "nama": { "type": "string", "example": "Staff IT" },
+          "tipe": { "type": "string", "example": "Jabatan" }
+        }
+      },
+      "SettingTunjangan": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "tarif_per_km": { "type": "number", "example": 500.00 },
+          "berlaku_mulai": { "type": "string", "format": "date", "example": "2026-01-01" },
+          "min_kilometer": { "type": "integer", "example": 5 },
+          "max_kilometer": { "type": "integer", "example": 50 },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TunjanganBulan": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "bulan": { "type": "integer", "example": 6 },
+          "tahun": { "type": "integer", "example": 2026 },
+          "total_penerima": { "type": "integer", "example": 8 },
+          "total_tunjangan": { "type": "number", "example": 3520000.00 },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "DetailTunjangan": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "id_tunjangan": { "type": "integer", "example": 1 },
+          "id_pegawai": { "type": "integer", "example": 3 },
+          "kilometer": { "type": "integer", "example": 20 },
+          "jumlah_hari": { "type": "integer", "example": 22 },
+          "nominal": { "type": "number", "example": 220000.00 },
+          "pegawai": { "$ref": "#/components/schemas/Pegawai" }
+        }
+      },
+      "Activity": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "1" },
+          "user": { "type": "string", "example": "Admin HRD" },
+          "modul": { "type": "string", "example": "Data Pegawai" },
+          "aksi": { "type": "string", "example": "Menambahkan pegawai baru" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "RolePermission": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "id_role": { "type": "integer", "example": 1 },
+          "modul_fitur": { "type": "string", "example": "Data Pegawai" },
+          "akses": { "type": "integer", "example": 1 },
+          "create": { "type": "integer", "example": 1 },
+          "read": { "type": "string", "enum": ["All", "Own", "No"] },
+          "update": { "type": "string", "enum": ["All", "Own", "No"] },
+          "delete": { "type": "string", "enum": ["All", "Own", "No"] }
+        }
+      },
+      "MasterWilayah": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "kecamatan": { "type": "string", "example": "Lowokwaru" },
+          "kabupaten": { "type": "string", "example": "Kota Malang" },
+          "provinsi": { "type": "string", "example": "Jawa Timur" }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "total": { "type": "integer", "example": 25 },
+          "page": { "type": "integer", "example": 1 },
+          "limit": { "type": "integer", "example": 10 },
+          "totalPages": { "type": "integer", "example": 3 }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "statusCode": { "type": "integer", "example": 400 },
+          "statusMessage": { "type": "string", "example": "Pesan error" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login user",
+        "description": "Autentikasi user dengan username dan password. Mengembalikan token JWT yang digunakan untuk mengakses endpoint yang memerlukan autentikasi.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": { "type": "string", "example": "admin_hrd", "description": "Username, email, atau nomor HP pegawai" },
+                  "password": { "type": "string", "example": "Adminhrd1!" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "message": { "type": "string", "example": "Login berhasil" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIs..." },
+                        "user": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "integer", "example": 1 },
+                            "nama": { "type": "string", "example": "Admin HRD" },
+                            "username": { "type": "string", "example": "admin_hrd" },
+                            "role": { "type": "string", "example": "Admin HRD" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Username/password salah atau akun dinonaktifkan", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Logout user",
+        "description": "Mencatat aktifitas logout. Token tetap valid sampai expired.",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Logout berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "message": { "type": "string", "example": "Logout berhasil dicatat" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/stats": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Ambil statistik dashboard",
+        "description": "Mengembalikan data statistik untuk dashboard Manager HRD: total pegawai, kontrak, tetap, magang, gender, dan 5 pegawai terbaru.",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "totalPegawai": { "type": "integer", "example": 9 },
+                        "totalKontrak": { "type": "integer", "example": 0 },
+                        "totalTetap": { "type": "integer", "example": 8 },
+                        "totalMagang": { "type": "integer", "example": 1 },
+                        "totalPria": { "type": "integer", "example": 7 },
+                        "totalWanita": { "type": "integer", "example": 2 },
+                        "pegawaiTerbaru": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "nipp": { "type": "string", "example": "0025" },
+                              "nama": { "type": "string", "example": "Ahmad Hendarto" },
+                              "photo": { "type": "string", "example": "../default-avatar.png" },
+                              "tanggalMasuk": { "type": "string", "example": "2026-05-12" },
+                              "status": { "type": "string", "example": "PKWTT" },
+                              "jabatan": { "type": "string", "example": "Staff IT" }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Token tidak tersedia", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/pegawai": {
+      "get": {
+        "tags": ["Pegawai"],
+        "summary": "Ambil daftar pegawai",
+        "description": "Mengambil daftar pegawai dengan pagination, pencarian, sorting, dan filter.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } },
+          { "name": "search", "in": "query", "description": "Cari berdasarkan NIP, nama, atau jabatan", "schema": { "type": "string" } },
+          { "name": "sort_by", "in": "query", "schema": { "type": "string", "enum": ["nip", "nama", "jabatan", "tanggal_masuk", "masa_kerja", "created_at"], "default": "created_at" } },
+          { "name": "sort_order", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "desc" } },
+          { "name": "jabatan", "in": "query", "description": "Filter ID jabatan (pisah koma, misal: 1,2,3)", "schema": { "type": "string" } },
+          { "name": "status_kontrak", "in": "query", "schema": { "type": "string", "enum": ["PKWT", "PKWTT"] } },
+          { "name": "masa_kerja_min", "in": "query", "description": "Minimum masa kerja (tahun)", "schema": { "type": "integer" } },
+          { "name": "masa_kerja_max", "in": "query", "description": "Maksimum masa kerja (tahun)", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Pegawai" } },
+                    "meta": { "$ref": "#/components/schemas/PaginationMeta" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pegawai/{nip}": {
+      "get": {
+        "tags": ["Pegawai"],
+        "summary": "Ambil detail pegawai",
+        "description": "Mengambil data lengkap pegawai berdasarkan NIP, termasuk jabatan, departemen, kecamatan, dan riwayat pendidikan.",
+        "parameters": [
+          { "name": "nip", "in": "path", "required": true, "description": "NIP pegawai", "schema": { "type": "string", "example": "0025" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "data": { "$ref": "#/components/schemas/Pegawai" } } } } }
+          },
+          "404": { "description": "Pegawai tidak ditemukan", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/pegawai/create": {
+      "post": {
+        "tags": ["Pegawai"],
+        "summary": "Tambah pegawai baru",
+        "description": "Membuat data pegawai baru dengan upload foto. Mendukung multipart/form-data.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["nip", "nama_pegawai", "email", "nomor_hp", "tempat_lahir", "tanggal_lahir", "status_kawin", "tanggal_masuk", "id_jabatan", "id_departemen", "jenis_kelamin", "status_kontrak"],
+                "properties": {
+                  "nip": { "type": "string", "example": "00250001", "description": "Minimal 8 digit" },
+                  "nama_pegawai": { "type": "string", "example": "Ahmad Hendarto" },
+                  "email": { "type": "string", "example": "ahmad@mail.com" },
+                  "nomor_hp": { "type": "string", "example": "+6281234567890" },
+                  "tempat_lahir": { "type": "string", "example": "Jakarta" },
+                  "tanggal_lahir": { "type": "string", "format": "date" },
+                  "status_kawin": { "type": "string", "enum": ["Kawin", "Tidak Kawin"] },
+                  "jenis_kelamin": { "type": "string", "enum": ["Pria", "Wanita"] },
+                  "status_kontrak": { "type": "string", "enum": ["PKWT", "PKWTT"] },
+                  "tanggal_masuk": { "type": "string", "format": "date" },
+                  "id_jabatan": { "type": "integer" },
+                  "id_departemen": { "type": "integer" },
+                  "foto_pegawai": { "type": "string", "format": "binary", "description": "PNG/JPEG/JPG, maks 2MB" },
+                  "id_kecamatan": { "type": "integer" },
+                  "alamat_lengkap": { "type": "string" },
+                  "jarak_rumah_kantor": { "type": "integer" },
+                  "jumlah_anak": { "type": "integer" },
+                  "usia": { "type": "integer" },
+                  "status": { "type": "string", "enum": ["Aktif", "Nonaktif"], "default": "Aktif" },
+                  "pendidikan": { "type": "string", "description": "JSON string array: [{tingkat_pendidikan, nama_sekolah, tahun_lulus}]" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Pegawai berhasil ditambahkan", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "message": { "type": "string", "example": "Data pegawai berhasil ditambahkan" }, "data": { "$ref": "#/components/schemas/Pegawai" } } } } } },
+          "400": { "description": "Validasi gagal", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "409": { "description": "NIP atau Email sudah terdaftar", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/pegawai/{id}": {
+      "put": {
+        "tags": ["Pegawai"],
+        "summary": "Update data pegawai",
+        "description": "Mengubah data pegawai berdasarkan ID. Mendukung upload foto baru dan update riwayat pendidikan.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nama_pegawai": { "type": "string" },
+                  "email": { "type": "string" },
+                  "nomor_hp": { "type": "string" },
+                  "foto_pegawai": { "type": "string", "format": "binary" },
+                  "pendidikan": { "type": "string", "description": "JSON string array (mengganti seluruh data pendidikan lama)" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Pegawai berhasil diperbarui", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "message": { "type": "string", "example": "Data pegawai berhasil diubah" }, "data": { "$ref": "#/components/schemas/Pegawai" } } } } } }
+        }
+      },
+      "delete": {
+        "tags": ["Pegawai"],
+        "summary": "Hapus pegawai",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Pegawai berhasil dihapus", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "message": { "type": "string", "example": "Data pegawai Ahmad berhasil dihapus" } } } } } },
+          "404": { "description": "Pegawai tidak ditemukan" }
+        }
+      }
+    },
+    "/api/pegawai/bulk-delete": {
+      "delete": {
+        "tags": ["Pegawai"],
+        "summary": "Hapus banyak pegawai sekaligus",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "required": ["ids"], "properties": { "ids": { "type": "array", "items": { "type": "integer" }, "example": [1, 2, 3] } } } } }
+        },
+        "responses": {
+          "200": { "description": "Berhasil dihapus", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "message": { "type": "string", "example": "3 data pegawai berhasil dihapus" } } } } } }
+        }
+      }
+    },
+    "/api/pegawai/bulk-status": {
+      "put": {
+        "tags": ["Pegawai"],
+        "summary": "Ubah status banyak pegawai sekaligus",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "required": ["ids", "status"], "properties": { "ids": { "type": "array", "items": { "type": "integer" }, "example": [1, 2] }, "status": { "type": "string", "enum": ["Aktif", "Nonaktif"], "example": "Nonaktif" } } } } }
+        },
+        "responses": {
+          "200": { "description": "Status berhasil diubah", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "message": { "type": "string", "example": "Status 2 data pegawai berhasil diubah" } } } } } }
+        }
+      }
+    },
+    "/api/pegawai/search": {
+      "get": {
+        "tags": ["Pegawai"],
+        "summary": "Cari pegawai (autocomplete)",
+        "description": "Endpoint pencarian nama pegawai untuk fitur autocomplete di form user.",
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "description": "Keyword pencarian (minimal 2 karakter)", "schema": { "type": "string", "example": "Ahmad" } }
+        ],
+        "responses": {
+          "200": { "description": "Berhasil", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/Pegawai" } } } } } } }
+        }
+      }
+    },
+    "/api/user": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Ambil daftar user",
+        "description": "Mengambil daftar user beserta data role dan pegawai terkait. Mendukung pagination.",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": { "description": "Berhasil", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/User" } }, "meta": { "$ref": "#/components/schemas/PaginationMeta" } } } } } }
+        }
+      }
+    },
+    "/api/user/create": {
+      "post": {
+        "tags": ["User"],
+        "summary": "Tambah user baru",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["nama", "username", "password", "id_role"],
+                "properties": {
+                  "nama": { "type": "string", "example": "Budi" },
+                  "username": { "type": "string", "example": "budi123" },
+                  "password": { "type": "string", "example": "Password1!" },
+                  "id_role": { "type": "integer", "example": 3 },
+                  "id_pegawai": { "type": "integer", "example": 1 },
+                  "disabled": { "type": "integer", "example": 0 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "User berhasil ditambahkan", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "data": { "$ref": "#/components/schemas/User" } } } } } },
+          "409": { "description": "Username sudah digunakan", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/user/{id}": {
+      "put": {
+        "tags": ["User"],
+        "summary": "Update data user",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nama": { "type": "string" },
+                  "username": { "type": "string" },
+                  "password": { "type": "string", "description": "Opsional, kosongkan jika tidak ingin ubah password" },
+                  "id_role": { "type": "integer" },
+                  "id_pegawai": { "type": "integer" },
+                  "disabled": { "type": "integer" },
+                  "id_jabatan": { "type": "integer" },
+                  "id_departemen": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "User berhasil diperbarui", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "message": { "type": "string", "example": "User berhasil diperbarui" }, "data": { "$ref": "#/components/schemas/User" } } } } } },
+          "409": { "description": "Username sudah digunakan", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["User"],
+        "summary": "Hapus user",
+        "description": "Menghapus user. Tidak bisa menghapus akun sendiri.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
+        "responses": {
+          "200": { "description": "User berhasil dihapus" },
+          "403": { "description": "Tidak dapat menghapus akun sendiri", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/user/check-username": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Cek ketersediaan username",
+        "parameters": [
+          { "name": "username", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "excludeId", "in": "query", "description": "ID user yang dikecualikan (untuk mode edit)", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Berhasil", "content": { "application/json": { "schema": { "type": "object", "properties": { "available": { "type": "boolean", "example": true } } } } } }
+        }
+      }
+    },
+    "/api/user/profile": {
+      "get": {
+        "tags": ["Profil"],
+        "summary": "Ambil profil user yang sedang login",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "data": { "$ref": "#/components/schemas/User" } } } } }
+          },
+          "401": { "description": "Token tidak tersedia", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      },
+      "put": {
+        "tags": ["Profil"],
+        "summary": "Update profil user yang sedang login",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "required": ["nama", "username"], "properties": { "nama": { "type": "string" }, "username": { "type": "string" }, "email": { "type": "string" } } } } }
+        },
+        "responses": {
+          "200": { "description": "Profil berhasil diperbarui", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "message": { "type": "string", "example": "Profil berhasil diperbarui" }, "data": { "$ref": "#/components/schemas/User" } } } } } },
+          "400": { "description": "Username sudah digunakan" },
+          "401": { "description": "Token tidak tersedia" }
+        }
+      }
+    },
+    "/api/user/change-password": {
+      "put": {
+        "tags": ["Profil"],
+        "summary": "Ganti password",
+        "description": "Mengubah password user yang sedang login. Aturan: minimal 8 karakter, ada huruf besar, huruf kecil, dan karakter khusus.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "required": ["oldPassword", "newPassword"], "properties": { "oldPassword": { "type": "string", "example": "Adminhrd1!" }, "newPassword": { "type": "string", "example": "NewPass1!" } } } } }
+        },
+        "responses": {
+          "200": { "description": "Password berhasil diubah", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "message": { "type": "string", "example": "Password berhasil diubah" } } } } } },
+          "400": { "description": "Password lama salah atau aturan tidak terpenuhi" },
+          "401": { "description": "Token tidak tersedia" }
+        }
+      }
+    },
+    "/api/user/role": {
+      "get": {
+        "tags": ["User Role"],
+        "summary": "Ambil daftar role",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": { "description": "Berhasil", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/UserRole" } }, "meta": { "$ref": "#/components/schemas/PaginationMeta" } } } } } }
+        }
+      }
+    },
+    "/api/user/role/{id}": {
+      "get": {
+        "tags": ["User Role"],
+        "summary": "Ambil detail role beserta hak akses",
+        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "data": { "allOf": [ { "$ref": "#/components/schemas/UserRole" }, { "type": "object", "properties": { "permission": { "type": "array", "items": { "$ref": "#/components/schemas/RolePermission" } } } } ] } } } } }
+          }
+        }
+      }
+    },
+    "/api/tunjangan/setting": {
+      "get": {
+        "tags": ["Tunjangan"],
+        "summary": "Ambil setting tarif tunjangan terbaru",
+        "responses": {
+          "200": { "description": "Berhasil", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "data": { "$ref": "#/components/schemas/SettingTunjangan" } } } } } }
+        }
+      },
+      "post": {
+        "tags": ["Tunjangan"],
+        "summary": "Simpan setting tarif tunjangan baru",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "required": ["tarif_per_km", "berlaku_mulai", "min_kilometer", "max_kilometer"], "properties": { "tarif_per_km": { "type": "number", "example": 500 }, "berlaku_mulai": { "type": "string", "format": "date", "example": "2026-01-01" }, "min_kilometer": { "type": "integer", "example": 5 }, "max_kilometer": { "type": "integer", "example": 50 } } } } }
+        },
+        "responses": {
+          "200": { "description": "Setting berhasil disimpan", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "message": { "type": "string", "example": "Pengaturan tunjangan berhasil disimpan" }, "data": { "$ref": "#/components/schemas/SettingTunjangan" } } } } } },
+          "400": { "description": "Field wajib tidak lengkap" }
+        }
+      }
+    },
+    "/api/tunjangan": {
+      "get": {
+        "tags": ["Tunjangan"],
+        "summary": "Ambil daftar riwayat tunjangan bulanan",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": { "description": "Berhasil", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/TunjanganBulan" } }, "meta": { "$ref": "#/components/schemas/PaginationMeta" } } } } } }
+        }
+      }
+    },
+    "/api/tunjangan/{id}": {
+      "get": {
+        "tags": ["Tunjangan"],
+        "summary": "Ambil detail tunjangan beserta data per pegawai",
+        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "data": { "allOf": [ { "$ref": "#/components/schemas/TunjanganBulan" }, { "type": "object", "properties": { "detail_tunjangan": { "type": "array", "items": { "$ref": "#/components/schemas/DetailTunjangan" } } } } ] } } } } }
+          },
+          "400": { "description": "ID tidak valid" },
+          "404": { "description": "Data tidak ditemukan" }
+        }
+      }
+    },
+    "/api/tunjangan/generate": {
+      "post": {
+        "tags": ["Tunjangan"],
+        "summary": "Generate perhitungan tunjangan transport",
+        "description": "Menghitung tunjangan transport untuk bulan/tahun tertentu. Rumus: (jarak × tarif_per_km) × hari_kerja. Syarat: pegawai aktif, hari kerja ≥ 19, jarak ≥ min_kilometer.",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "required": ["bulan", "tahun", "data_hari_kerja"], "properties": { "bulan": { "type": "integer", "example": 6 }, "tahun": { "type": "integer", "example": 2026 }, "data_hari_kerja": { "type": "object", "additionalProperties": { "type": "integer" }, "example": { "1": 22, "2": 20, "3": 22 }, "description": "Key = ID pegawai, Value = jumlah hari kerja" } } } } }
+        },
+        "responses": {
+          "200": { "description": "Berhasil", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "message": { "type": "string", "example": "Berhasil men-generate tunjangan untuk 8 pegawai" }, "data": { "$ref": "#/components/schemas/TunjanganBulan" } } } } } },
+          "400": { "description": "Validasi gagal (field kosong / sudah pernah di-generate / setting belum diatur / tidak ada pegawai aktif)" }
+        }
+      }
+    },
+    "/api/master-data": {
+      "get": {
+        "tags": ["Master Data"],
+        "summary": "Ambil daftar master data",
+        "parameters": [
+          { "name": "tipe", "in": "query", "description": "Filter berdasarkan tipe (Jabatan / Departemen)", "schema": { "type": "string", "example": "Jabatan" } }
+        ],
+        "responses": {
+          "200": { "description": "Berhasil", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/MasterData" } } } } } } }
+        }
+      }
+    },
+    "/api/master-data/create": {
+      "post": {
+        "tags": ["Master Data"],
+        "summary": "Tambah master data baru",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "required": ["nama", "tipe"], "properties": { "nama": { "type": "string", "example": "Staff Keuangan" }, "tipe": { "type": "string", "example": "Jabatan" } } } } }
+        },
+        "responses": {
+          "200": { "description": "Berhasil", "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "message": { "type": "string", "example": "Data berhasil ditambahkan" }, "data": { "$ref": "#/components/schemas/MasterData" } } } } } }
+        }
+      }
+    },
+    "/api/master-data/{id}": {
+      "delete": {
+        "tags": ["Master Data"],
+        "summary": "Hapus master data",
+        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
+        "responses": {
+          "200": { "description": "Berhasil dihapus" },
+          "400": { "description": "Data sedang digunakan oleh pegawai, tidak bisa dihapus" }
+        }
+      }
+    },
+    "/api/log": {
+      "get": {
+        "tags": ["Log Aktifitas"],
+        "summary": "Ambil daftar log aktifitas",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } },
+          { "name": "search", "in": "query", "description": "Cari berdasarkan judul, konten, atau nama user", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "status": { "type": "string", "example": "success" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/Activity" } }, "meta": { "type": "object", "properties": { "page": { "type": "integer" }, "limit": { "type": "integer" }, "totalRows": { "type": "integer" }, "totalPages": { "type": "integer" } } } } } } }
+          },
+          "401": { "description": "Token tidak tersedia" }
+        }
+      }
+    },
+    "/api/wilayah/search": {
+      "get": {
+        "tags": ["Wilayah"],
+        "summary": "Cari data wilayah (kecamatan)",
+        "description": "Endpoint pencarian kecamatan untuk fitur autocomplete di form pegawai. Minimal 3 karakter.",
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "description": "Keyword pencarian (minimal 3 karakter)", "schema": { "type": "string", "example": "Lowok" } }
+        ],
+        "responses": {
+          "200": { "description": "Berhasil", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/MasterWilayah" } } } } }
+        }
+      }
+    }
+  }
+}

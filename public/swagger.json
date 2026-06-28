@@ -1,0 +1,545 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API Modul Perhitungan Tunjangan Transport",
+    "description": "Dokumentasi API untuk modul perhitungan tunjangan transport pada Aplikasi Kepegawaian JMC. Modul ini mencakup pengaturan tarif, generate perhitungan, serta melihat riwayat dan detail tunjangan.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Tim Magang JMC"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Setting Tunjangan",
+      "description": "Endpoint untuk mengatur tarif tunjangan transport"
+    },
+    {
+      "name": "Riwayat Tunjangan",
+      "description": "Endpoint untuk melihat daftar dan detail riwayat tunjangan"
+    },
+    {
+      "name": "Generate Tunjangan",
+      "description": "Endpoint untuk menjalankan proses perhitungan tunjangan"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Masukkan token JWT yang didapat dari endpoint login. Format: Bearer <token>"
+      }
+    },
+    "schemas": {
+      "SettingTunjangan": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "tarif_per_km": {
+            "type": "number",
+            "format": "decimal",
+            "example": 500.00,
+            "description": "Tarif rupiah per kilometer"
+          },
+          "berlaku_mulai": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-01-01",
+            "description": "Tanggal mulai berlaku tarif"
+          },
+          "min_kilometer": {
+            "type": "integer",
+            "example": 5,
+            "description": "Jarak minimum (km) agar pegawai berhak menerima tunjangan"
+          },
+          "max_kilometer": {
+            "type": "integer",
+            "example": 50,
+            "description": "Jarak maksimum (km) yang dihitung, lebih dari ini tetap dihitung sebagai max"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-06-01T07:00:00.000Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-06-01T07:00:00.000Z"
+          }
+        }
+      },
+      "TunjanganBulan": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "bulan": {
+            "type": "integer",
+            "example": 6,
+            "description": "Bulan (1-12)"
+          },
+          "tahun": {
+            "type": "integer",
+            "example": 2026,
+            "description": "Tahun"
+          },
+          "total_penerima": {
+            "type": "integer",
+            "example": 8,
+            "description": "Jumlah pegawai yang menerima tunjangan"
+          },
+          "total_tunjangan": {
+            "type": "number",
+            "format": "decimal",
+            "example": 3520000.00,
+            "description": "Total nominal tunjangan dalam rupiah"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "DetailTunjangan": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "id_tunjangan": {
+            "type": "integer",
+            "example": 1
+          },
+          "id_pegawai": {
+            "type": "integer",
+            "example": 3
+          },
+          "kilometer": {
+            "type": "integer",
+            "example": 20,
+            "description": "Jarak tempuh (km) yang dihitung"
+          },
+          "jumlah_hari": {
+            "type": "integer",
+            "example": 22,
+            "description": "Jumlah hari kerja"
+          },
+          "nominal": {
+            "type": "number",
+            "format": "decimal",
+            "example": 220000.00,
+            "description": "Nominal tunjangan = kilometer × tarif_per_km × jumlah_hari"
+          },
+          "pegawai": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer", "example": 3 },
+              "nama_pegawai": { "type": "string", "example": "Ahmad Hendarto" },
+              "nip": { "type": "string", "example": "0025" },
+              "jarak_rumah_kantor": { "type": "integer", "example": 20 }
+            }
+          }
+        }
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "example": 25,
+            "description": "Total seluruh data"
+          },
+          "page": {
+            "type": "integer",
+            "example": 1,
+            "description": "Halaman saat ini"
+          },
+          "limit": {
+            "type": "integer",
+            "example": 10,
+            "description": "Jumlah data per halaman"
+          },
+          "totalPages": {
+            "type": "integer",
+            "example": 3,
+            "description": "Total halaman"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "example": 400
+          },
+          "statusMessage": {
+            "type": "string",
+            "example": "Pesan error"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/tunjangan/setting": {
+      "get": {
+        "tags": ["Setting Tunjangan"],
+        "summary": "Ambil setting tarif tunjangan terbaru",
+        "description": "Mengambil 1 data pengaturan tarif tunjangan yang paling baru berdasarkan tanggal `berlaku_mulai`.",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Berhasil mengambil data setting",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": { "$ref": "#/components/schemas/SettingTunjangan" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Setting Tunjangan"],
+        "summary": "Simpan setting tarif tunjangan baru",
+        "description": "Membuat data pengaturan tarif tunjangan baru. Data lama tidak dihapus (riwayat tarif tetap tersimpan).",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tarif_per_km", "berlaku_mulai", "min_kilometer", "max_kilometer"],
+                "properties": {
+                  "tarif_per_km": {
+                    "type": "number",
+                    "example": 500,
+                    "description": "Tarif per kilometer (Rp)"
+                  },
+                  "berlaku_mulai": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-01-01",
+                    "description": "Tanggal mulai berlaku"
+                  },
+                  "min_kilometer": {
+                    "type": "integer",
+                    "example": 5,
+                    "description": "Jarak minimum agar berhak menerima"
+                  },
+                  "max_kilometer": {
+                    "type": "integer",
+                    "example": 50,
+                    "description": "Batas jarak maksimum yang dihitung"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Berhasil menyimpan setting",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "message": { "type": "string", "example": "Pengaturan tunjangan berhasil disimpan" },
+                    "data": { "$ref": "#/components/schemas/SettingTunjangan" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validasi gagal — field wajib tidak lengkap",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tunjangan": {
+      "get": {
+        "tags": ["Riwayat Tunjangan"],
+        "summary": "Ambil daftar riwayat tunjangan bulanan",
+        "description": "Mengambil daftar rekap tunjangan per bulan, diurutkan dari yang terbaru. Mendukung pagination.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Nomor halaman (default: 1)",
+            "required": false,
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Jumlah data per halaman (default: 10)",
+            "required": false,
+            "schema": { "type": "integer", "default": 10 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil mengambil daftar tunjangan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/TunjanganBulan" }
+                    },
+                    "meta": { "$ref": "#/components/schemas/PaginationMeta" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tunjangan/{id}": {
+      "get": {
+        "tags": ["Riwayat Tunjangan"],
+        "summary": "Ambil detail tunjangan berdasarkan ID",
+        "description": "Mengambil data rekap tunjangan bulan tertentu beserta seluruh detail per pegawai (termasuk data pegawai terkait).",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID tunjangan bulan",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil mengambil detail tunjangan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "data": {
+                      "allOf": [
+                        { "$ref": "#/components/schemas/TunjanganBulan" },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "detail_tunjangan": {
+                              "type": "array",
+                              "items": { "$ref": "#/components/schemas/DetailTunjangan" }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ID tidak valid",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Data tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tunjangan/generate": {
+      "post": {
+        "tags": ["Generate Tunjangan"],
+        "summary": "Generate perhitungan tunjangan transport",
+        "description": "Menjalankan proses perhitungan tunjangan transport untuk bulan dan tahun tertentu. Sistem akan:\n1. Validasi apakah bulan/tahun sudah pernah di-generate\n2. Mengambil setting tarif terbaru\n3. Mengambil semua pegawai aktif\n4. Menghitung nominal per pegawai dengan rumus: `(jarak × tarif_per_km) × hari_kerja`\n5. Menyimpan rekap bulanan dan detail per pegawai dalam satu transaksi database\n\n**Syarat pegawai dihitung:**\n- Status pegawai = Aktif\n- Jumlah hari kerja ≥ 19 hari\n- Jarak rumah ke kantor ≥ min_kilometer (dari setting)",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["bulan", "tahun", "data_hari_kerja"],
+                "properties": {
+                  "bulan": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 12,
+                    "example": 6,
+                    "description": "Bulan yang akan dihitung (1-12)"
+                  },
+                  "tahun": {
+                    "type": "integer",
+                    "example": 2026,
+                    "description": "Tahun yang akan dihitung"
+                  },
+                  "data_hari_kerja": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "integer"
+                    },
+                    "example": {
+                      "1": 22,
+                      "2": 20,
+                      "3": 22,
+                      "5": 21
+                    },
+                    "description": "Object berisi pasangan id_pegawai (string) dan jumlah hari kerja (integer). Key = ID pegawai, Value = jumlah hari kerja bulan tersebut."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Berhasil men-generate tunjangan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "success" },
+                    "message": { "type": "string", "example": "Berhasil men-generate tunjangan untuk 8 pegawai" },
+                    "data": { "$ref": "#/components/schemas/TunjanganBulan" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validasi gagal",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "examples": {
+                  "field_kosong": {
+                    "summary": "Field wajib tidak lengkap",
+                    "value": {
+                      "statusCode": 400,
+                      "statusMessage": "Bulan, tahun, dan data hari kerja wajib diisi"
+                    }
+                  },
+                  "sudah_generate": {
+                    "summary": "Bulan sudah pernah di-generate",
+                    "value": {
+                      "statusCode": 400,
+                      "statusMessage": "Data tunjangan untuk bulan 6/2026 sudah pernah di-generate."
+                    }
+                  },
+                  "setting_belum_diatur": {
+                    "summary": "Setting tarif belum ada",
+                    "value": {
+                      "statusCode": 400,
+                      "statusMessage": "Setting tarif tunjangan belum diatur. Silakan atur terlebih dahulu."
+                    }
+                  },
+                  "tidak_ada_pegawai": {
+                    "summary": "Tidak ada pegawai aktif",
+                    "value": {
+                      "statusCode": 400,
+                      "statusMessage": "Tidak ada pegawai aktif untuk dihitung."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
