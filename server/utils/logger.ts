@@ -3,14 +3,6 @@ import { H3Event } from 'h3'
 
 const prisma = new PrismaClient()
 
-/**
- * Mencatat aktivitas pengguna ke dalam database (Tabel activities)
- * 
- * @param event - H3Event dari Nuxt untuk membaca IP, User-Agent, dan URL
- * @param title - Aksi yang dilakukan (misal: "LOGIN", "CREATE", "UPDATE", "DELETE", "READ")
- * @param content - Deskripsi atau modul yang diakses (misal: "Modul User - Menambah akun budi")
- * @param userId - ID User yang melakukan aksi (didapat dari verifyToken, jika login biarkan null karena di-set setelah verifikasi)
- */
 export const logActivity = async (event: H3Event, title: string, content: string, userId: number) => {
     try {
         const req = event.node.req
@@ -22,7 +14,6 @@ export const logActivity = async (event: H3Event, title: string, content: string
         
         const url = req.url || ''
         
-        // Deteksi sederhana browser & platform dari User-Agent
         let browser = 'Unknown'
         let platform = 'Unknown'
         

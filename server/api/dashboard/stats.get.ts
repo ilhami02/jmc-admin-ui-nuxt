@@ -3,14 +3,12 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
-    // 1. Verifikasi User (hanya Manager HRD yang butuh ini)
     const user = verifyToken(event)
     if (!user) {
         throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
     }
 
     try {
-        // Ambil ID Jabatan untuk "Magang" secara dinamis
         const magangJabatan = await prisma.masterData.findFirst({
             where: {
                 tipe: 'jabatan',

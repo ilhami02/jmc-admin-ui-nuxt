@@ -135,7 +135,6 @@ onMounted(() => {
 });
 
 const handleLogin = async () => {
-  // 1. Validasi Captcha (case insensitive untuk memudahkan)
   if (inputCaptcha.value.toLowerCase() !== captchaText.value.toLowerCase()) {
     alert('Kode Captcha tidak cocok!');
     inputCaptcha.value = '';
@@ -150,9 +149,7 @@ const handleLogin = async () => {
     });
 
     if (res.status === 'success' && res.data.token) {
-      // Simpan token ke cookie
       tokenCookie.value = res.data.token;
-      // Simpan status remember me (untuk idle timeout plugin)
       rememberCookie.value = rememberMe.value ? 'true' : 'false';
       
       // Ambil id_role dari payload token (index 1 dari jwt string)

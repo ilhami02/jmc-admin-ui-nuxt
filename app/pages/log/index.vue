@@ -38,7 +38,7 @@
       </table>
     </div>
     <div class="card-footer d-flex align-items-center">
-      <ul class="pagination ms-auto m-0">
+      <ul class="pagination ms-auto m-0" v-if="totalPages > 1">
         <!-- Previous Page -->
         <li class="page-item" :class="{ disabled: page === 1 }">
           <a class="page-link" href="#" @click.prevent="changePage(page - 1)" tabindex="-1">

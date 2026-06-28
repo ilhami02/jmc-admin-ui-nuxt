@@ -31,11 +31,11 @@
             </tr>
           </thead>
           <tbody
-            v-for="(item, index) in sortedDetailTunjangan"
+            v-for="(item, index) in paginatedDetailTunjangan"
             :key="item.id"
           >
             <tr>
-              <td class="text-center">{{ index + 1 }}</td>
+              <td class="text-center">{{ (currentPage - 1) * limit + index + 1 }}</td>
               <td>{{ item.pegawai?.nama_pegawai || 'Anonim' }}</td>
               <td class="text-center">{{ item.kilometer }}</td>
               <td class="text-center">{{ item.jumlah_hari }}</td>
@@ -48,31 +48,20 @@
         </table>
       </div>
       <div class="card-footer d-flex align-items-center">
-        <ul class="pagination ms-auto m-0">
-          <li class="page-item"><a class="page-link" href="#">1</a></li>
-          <li class="page-item active"><a class="page-link" href="#">2</a></li>
-          <li class="page-item"><a class="page-link" href="#">3</a></li>
-          <li class="page-item"><a class="page-link" href="#">4</a></li>
-          <li class="page-item"><a class="page-link" href="#">5</a></li>
-          <li class="page-item">
-            <a class="page-link" href="#">
+        <ul class="pagination ms-auto m-0" v-if="totalPages > 1">
+          <li class="page-item" :class="{ disabled: currentPage === 1 }">
+            <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>
+              prev
+            </a>
+          </li>
+          <li class="page-item" v-for="p in totalPages" :key="p" :class="{ active: p === currentPage }">
+            <a class="page-link" href="#" @click.prevent="changePage(p)">{{ p }}</a>
+          </li>
+          <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+            <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">
               next
-              <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="icon"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                stroke-width="2"
-                stroke="currentColor"
-                fill="none"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M9 6l6 6l-6 6"></path>
-              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>
             </a>
           </li>
         </ul>
@@ -141,6 +130,25 @@ const sortedDetailTunjangan = computed(() => {
   
   return data;
 });
+
+const currentPage = ref(1);
+const limit = ref(10);
+
+const paginatedDetailTunjangan = computed(() => {
+  const start = (currentPage.value - 1) * limit.value;
+  const end = start + limit.value;
+  return sortedDetailTunjangan.value.slice(start, end);
+});
+
+const totalPages = computed(() => {
+  return Math.ceil(sortedDetailTunjangan.value.length / limit.value);
+});
+
+const changePage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
+};
 
 const getMonthName = (monthNumber) => {
   if (!monthNumber) return '';

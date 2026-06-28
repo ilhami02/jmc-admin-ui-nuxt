@@ -46,31 +46,20 @@
       </table>
     </div>
     <div class="card-footer d-flex align-items-center">
-      <ul class="pagination ms-auto m-0">
-        <li class="page-item"><a class="page-link" href="#">1</a></li>
-        <li class="page-item active"><a class="page-link" href="#">2</a></li>
-        <li class="page-item"><a class="page-link" href="#">3</a></li>
-        <li class="page-item"><a class="page-link" href="#">4</a></li>
-        <li class="page-item"><a class="page-link" href="#">5</a></li>
-        <li class="page-item">
-          <a class="page-link" href="#">
+      <ul class="pagination ms-auto m-0" v-if="meta.totalPages > 1">
+        <li class="page-item" :class="{ disabled: currentPage === 1 }">
+          <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>
+            prev
+          </a>
+        </li>
+        <li class="page-item" v-for="p in meta.totalPages" :key="p" :class="{ active: p === currentPage }">
+          <a class="page-link" href="#" @click.prevent="changePage(p)">{{ p }}</a>
+        </li>
+        <li class="page-item" :class="{ disabled: currentPage === meta.totalPages }">
+          <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">
             next
-            <!-- Download SVG icon from http://tabler-icons.io/i/chevron-right -->
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="icon"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              stroke-width="2"
-              stroke="currentColor"
-              fill="none"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-              <path d="M9 6l6 6l-6 6"></path>
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>
           </a>
         </li>
       </ul>
@@ -91,10 +80,25 @@ import { IconSearch } from "@tabler/icons-vue";
 
 const token = useCookie('token');
 
+const currentPage = ref(1);
+const limit = ref(10);
+
 // get data dari API
 const { data: response, pending } = await useFetch('/api/user/role', {
-  headers: { Authorization: `Bearer ${token.value}` }
+  headers: { Authorization: `Bearer ${token.value}` },
+  query: {
+    page: currentPage,
+    limit: limit
+  },
+  watch: [currentPage]
 });
 
+const meta = computed(() => response.value?.meta || { totalPages: 1, page: 1, total: 0 });
 const listRole = computed(() => response.value?.data || []);
+
+const changePage = (page) => {
+  if (page >= 1 && page <= meta.value.totalPages) {
+    currentPage.value = page;
+  }
+};
 </script>
