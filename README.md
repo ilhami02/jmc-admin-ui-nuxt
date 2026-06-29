@@ -197,9 +197,9 @@ Setelah menjalankan seeder, akun berikut tersedia:
 
 | Username        | Password       | Role          |
 |-----------------|----------------|---------------|
-| `superadmin`    | `Superadmin1!` | Superadmin    |
-| `manager_hrd`   | `Manager1!`    | Manager HRD   |
-| `admin_hrd`     | `Adminhrd1!`   | Admin HRD     |
+| `superadmin`    | `superadmin123` | Superadmin    |
+| `manager_hrd`   | `manager123`    | Manager HRD   |
+| `admin_hrd`     | `adminhrd123`   | Admin HRD     |
 
 > **Catatan:** Password di atas mungkin berbeda tergantung isi seeder. Silakan cek file `prisma/seed.js` untuk informasi akurat.
 
