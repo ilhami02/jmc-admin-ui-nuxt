@@ -1,5 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  modules: ['nuxt-gtag'],
+  gtag: {
+    id: 'G-MB2XE3E180'
+  },
   future: {
     compatibilityVersion: 4,
   },
@@ -29,14 +33,6 @@ export default defineNuxtConfig({
       viewport: "width=device-width, initial-scale=1",
       link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.png" }],
       script: [
-        {
-          src: "https://www.googletagmanager.com/gtag/js?id=G-MB2XE3E180",
-          async: true,
-        },
-        {
-          children: "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-MB2XE3E180');",
-          type: "text/javascript",
-        },
         {
           src: "https://www.google.com/recaptcha/api.js",
           async: true,

@@ -21,6 +21,7 @@
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "nuxt": "^4.0.0",
+    "nuxt-gtag": "^4.1.0",
     "prisma": "^6.19.3",
     "swiper": "^12.1.4",
     "uuid": "^14.0.1",
