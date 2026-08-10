@@ -36,6 +36,9 @@ const { data: resStats, pending } = await useFetch('/api/dashboard/stats', {
   }
 });
 
+// Fetch website visitors (GA4) for 7 days
+const { data: visitorsRes, pending: visitorsPending, error: visitorsError } = await useFetch('/api/visitors');
+
 const stats = computed(() => resStats.value?.data || {
   totalPegawai: 0,
   totalKontrak: 0,
@@ -209,6 +212,19 @@ const genderPegawaiOptions = {
                   :series="genderPegawaiSeries"
                 />
               </ClientOnly>
+            </div>
+          </div>
+        </div>
+        <!-- Website Visitors (GA4) -->
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <h3 class="card-title">Statistik Website</h3>
+              <div v-if="visitorsPending">Memuat data...</div>
+              <div v-else-if="visitorsError">Gagal memuat data pengunjung.</div>
+              <div v-else>
+                <p>Pengunjung 7 Hari Terakhir: <strong>{{ visitorsRes?.data?.activeVisitors7Days }}</strong></p>
+              </div>
             </div>
           </div>
         </div>
